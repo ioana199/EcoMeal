@@ -1,10 +1,16 @@
 using EcoMeal.Components;
+using EcoMeal.Database;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+var connectionString = builder.Configuration.GetConnectionString("EcoMealContext");
+builder.Services.AddDbContext<EcoMealDBContext>(options =>
+    options.UseSqlServer(connectionString));    
 
 var app = builder.Build();
 
