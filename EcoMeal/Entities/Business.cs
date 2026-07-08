@@ -12,6 +12,6 @@ namespace EcoMeal.Entities
         public required string Address { get; set; }
         public string ImageUrl { get; set; }
         [ForeignKey("BusinessTypeId")]
-        public required BusinessType BusinessType { get; set; }
+        public BusinessType BusinessType { get; set; }
     }
 }

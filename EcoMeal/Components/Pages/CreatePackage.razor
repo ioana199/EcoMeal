@@ -1,0 +1,128 @@
+﻿@page "/package/create"
+@rendermode InteractiveServer
+@using EcoMeal.Entities.Enums
+@using EcoMeal.Entities
+@using EcoMeal.Controllers
+@inject BusinessController BusinessController
+@inject PackageController PackageController
+@inject NavigationManager NavigationManager
+
+
+<h3>Create Package</h3>
+
+<EditForm Model="@model" FormName="createPackageForm">
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <InputText id="name" class="form-control" @bind-Value="model.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <InputText id="description" class="form-control" @bind-Value="model.Description" />
+    </div>
+
+    <div class="mb-3">
+        <label for="PackageType" class="form-label">Type</label>
+        <InputSelect id="packageType" class="form-select" @bind-Value="model.PackageType">
+            @foreach (var type in Enum.GetValues<PackageTypeEnum>())
+            {
+                <option value="@type">@type</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label for="pickupStart" class="form-label">Pickup Start</label>
+        <InputDate id="pickupStart" class="form-control" @bind-Value="model.PickupStart" />
+    </div>
+
+    <div class="mb-3">
+        <label for="pickupEnd" class="form-label">Pickup End</label>
+        <InputDate id="pickupEnd" class="form-control" @bind-Value="model.PickupEnd" />
+    </div>
+
+    <div class="mb-3">
+        <label for="quantity" class="form-label">Quantity</label>
+        <InputNumber id="quantity" class="form-control" @bind-Value="model.Quantity" /> 
+    </div>
+
+    <div class="mb-3">
+        <label for="Price" class="form-label">Price</label>
+        <InputNumber id="Price" class="form-control" @bind-Value="model.Price" /> 
+    </div>
+
+    <div class="mb-3">
+        <label for="imageUrl" class="form-label">Image URL</label>
+        <InputText id="imageUrl" class="form-control" @bind-Value="model.ImageUrl" />
+    </div>
+    
+    <div class="mb-3">
+        <label for="BusinessId" class="form-label">Business</label>
+        <InputSelect id="BusinessId" class="form-select" @bind-Value="model.BusinessId" TValue="Guid">
+            @foreach (var business in businesses)
+            {
+                <option value="@business.Id.ToString()">@business.Name</option>
+            }
+        </InputSelect>
+    </div>
+
+    <button type="submit" class="btn btn-primary" @onclick="Submit">Submit</button>
+</EditForm>
+
+@code {
+    private PackageFormModel model = new PackageFormModel();
+    private List<Business> businesses = new List<Business>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        businesses = (await BusinessController.GetAll()).Value;
+
+        if (businesses != null && businesses.Any())
+        {
+            model.BusinessId = businesses.First().Id;
+        }
+    }
+
+    private async Task Submit()
+    {
+        Console.WriteLine($"[DEBUG] BusinessId primit din formular: {model.BusinessId}");
+
+        if (model.BusinessId == Guid.Empty)
+        {
+            Console.WriteLine("[EROARE] BusinessId este încă gol! Problema este la binding-ul din HTML.");
+            // Aici poți pune un return ca să nu mai încerce să salveze în baza de date până nu rezolvăm
+            return;
+        }
+
+        var package = new Package
+        {
+            Name = model.Name,
+            Description = model.Description,
+            PackageTypeId = (PackageTypeEnum)model.PackageType,
+            PickupStart = model.PickupStart,
+            PickupEnd = model.PickupEnd,
+            Quantity = model.Quantity,
+            Price = model.Price,
+            ImageUrl = model.ImageUrl,
+            BusinessId = model.BusinessId
+        };
+        await PackageController.Add(package);
+        NavigationManager.NavigateTo("/packages");
+
+    }
+
+    private class PackageFormModel
+    {
+        public string Name { get; set; } 
+        public string Description { get; set; }
+        public PackageTypeEnum PackageType { get; set; }
+        public DateTime PickupStart { get; set; } = DateTime.Now;
+        public DateTime PickupEnd { get; set; } = DateTime.Now.AddDays(1);
+        public int Quantity { get; set; }
+        public float Price { get; set; }
+        public string ImageUrl { get; set; } 
+        public Guid BusinessId { get; set; }
+
+        //intrebare: o sa luam cumva id-ul business-ului din token?
+    }
+}

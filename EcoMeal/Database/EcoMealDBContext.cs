@@ -1,6 +1,7 @@
 ﻿using EcoMeal.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace EcoMeal.Database
 {
@@ -32,7 +33,13 @@ namespace EcoMeal.Database
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-    
+             builder.Entity<OrderPackage>()
+        .HasOne(op => op.Package)
+        .WithMany()
+        .HasForeignKey(op => op.PackageId)
+        .OnDelete(DeleteBehavior.Restrict);
+           
+
         }
 
 

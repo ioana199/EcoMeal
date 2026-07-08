@@ -1,0 +1,52 @@
+﻿@page "/packages"
+@using EcoMeal.Controllers
+@using EcoMeal.Entities
+@inject PackageController PackageController
+<h3>Packages</h3>
+
+@if (packages is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Quantity</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var package in packages)
+            {
+                <tr>
+                    <img src="@package.ImageUrl" alt="@package.Name" width="60" />
+                    <td>@package.Name</td>
+                    <td>@package.Description</td>
+                    <td>@package.PackageType.Name</td>
+                    <td>@package.PickupStart</td>
+                    <td>@package.PickupEnd</td>
+                    <td>@package.Quantity</td>
+                    <td>@package.Price</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    private List<Package>? packages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        packages = (await PackageController.GetAll()).Value;
+    }
+}

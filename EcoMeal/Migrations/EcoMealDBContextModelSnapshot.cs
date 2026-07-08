@@ -447,7 +447,7 @@ namespace EcoMeal.Migrations
                     b.HasOne("EcoMeal.Entities.Package", "Package")
                         .WithMany()
                         .HasForeignKey("PackageId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");

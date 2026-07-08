@@ -1,0 +1,72 @@
+﻿@page "/business/create"
+@rendermode InteractiveServer
+@using EcoMeal.Controllers
+@using EcoMeal.Entities
+@using EcoMeal.Entities.Enums
+@inject BusinessController BusinessController
+@inject NavigationManager NavigationManager
+
+<h3>Create Business</h3>
+
+<EditForm Model="@model" FormName="createBusinessForm">
+    <div class="mb-3">
+        <label for="name" class="form-label">Name</label>
+        <InputText id="name" class="form-control" @bind-Value="model.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <InputText id="description" class="form-control" @bind-Value="model.Description" />
+    </div>
+
+    <div class="mb-3">
+        <label for="Address" class="form-label">Address</label>
+        <InputText id="Address" class="form-control" @bind-Value="model.Address" />
+    </div>
+
+    <div class="mb-3">
+        <label for="BusinessType" class="form-label">Type</label>
+        <InputSelect id="businessType" class="form-select" @bind-Value="model.BusinessType">
+            @foreach (var type in Enum.GetValues<BusinessTypeEnum>())
+            {
+                <option value="@type">@type</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="mb-3">
+        <label for="imageUrl" class="form-label">Image URL</label>
+        <InputText id="imageUrl" class="form-control" @bind-Value="model.ImageUrl" />
+    </div>
+
+    <button type="submit" class="btn btn-primary" @onclick="Submit">Submit</button>
+</EditForm>
+
+@code {
+    private BusinessFormModel model = new BusinessFormModel();
+
+    private async Task Submit()
+    {
+
+        var business = new Business
+        {
+            Name = model.Name,
+            Description = model.Description,
+            Address = model.Address,
+            BusinessTypeId = (BusinessTypeEnum)model.BusinessType,
+            ImageUrl = model.ImageUrl
+        };
+
+        await BusinessController.Add(business);
+        NavigationManager.NavigateTo("/counter");
+    }
+
+    private class BusinessFormModel
+    {
+        public string Name { get; set; } 
+        public string? Description { get; set; } 
+        public string Address { get; set; } 
+        public BusinessTypeEnum BusinessType { get; set; }
+        public string? ImageUrl { get; set; } 
+    }
+}

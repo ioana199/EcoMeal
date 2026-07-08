@@ -1,5 +1,10 @@
 using EcoMeal.Components;
+using EcoMeal.Controllers;
 using EcoMeal.Database;
+using EcoMeal.Repositories;
+using EcoMeal.Repositories.Interfaces;
+using EcoMeal.Services;
+using EcoMeal.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +16,16 @@ builder.Services.AddRazorComponents()
 var connectionString = builder.Configuration.GetConnectionString("EcoMealContext");
 builder.Services.AddDbContext<EcoMealDBContext>(options =>
     options.UseSqlServer(connectionString));    
+
+builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
+builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+
+builder.Services.AddScoped<IBusinessService, BusinessService>();
+builder.Services.AddScoped<IPackageService, PackageService>();
+
+builder.Services.AddControllers();
+builder.Services.AddScoped<BusinessController>();
+builder.Services.AddScoped<PackageController>();
 
 var app = builder.Build();
 

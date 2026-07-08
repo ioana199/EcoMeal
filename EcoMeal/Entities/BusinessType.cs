@@ -5,6 +5,6 @@ namespace EcoMeal.Entities
     public class BusinessType
     {
         public required BusinessTypeEnum Id { get; set; }
-        public required string Name { get; set; }
+        public required string Name { get; set; } 
     }
 }

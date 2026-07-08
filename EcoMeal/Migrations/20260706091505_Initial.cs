@@ -303,7 +303,7 @@ namespace EcoMeal.Migrations
                         column: x => x.PackageId,
                         principalTable: "Packages",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(

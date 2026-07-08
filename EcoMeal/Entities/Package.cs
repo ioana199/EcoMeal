@@ -5,7 +5,7 @@ namespace EcoMeal.Entities
 {
     public class Package
     {
-        public required Guid Id { get; set; }
+        public Guid Id { get; set; }
         public required Guid BusinessId { get; set; }
         public required PackageTypeEnum PackageTypeId { get; set; }
         public required string Name { get; set; }
@@ -17,6 +17,7 @@ namespace EcoMeal.Entities
         public string ImageUrl { get; set; }
         [ForeignKey("BusinessId")]
         public Business Business { get; set; }
+
         [ForeignKey("PackageTypeId")]
         public PackageType PackageType { get; set; }
 
