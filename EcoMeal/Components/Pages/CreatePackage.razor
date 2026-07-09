@@ -1,4 +1,5 @@
-﻿@page "/package/create"
+﻿@page "/packages/create"
+@page "/packages/update/{PackageId:guid}"
 @rendermode InteractiveServer
 @using EcoMeal.Entities.Enums
 @using EcoMeal.Entities
@@ -7,8 +8,14 @@
 @inject PackageController PackageController
 @inject NavigationManager NavigationManager
 
-
-<h3>Create Package</h3>
+@if (PackageId is null)
+{
+    <h3>Create Package</h3>
+}
+else
+{
+    <h3>Update Package</h3>
+}
 
 <EditForm Model="@model" FormName="createPackageForm">
     <div class="mb-3">
@@ -70,6 +77,8 @@
 </EditForm>
 
 @code {
+    [Parameter]
+    public Guid? PackageId { get; set; }
     private PackageFormModel model = new PackageFormModel();
     private List<Business> businesses = new List<Business>();
 
@@ -81,18 +90,26 @@
         {
             model.BusinessId = businesses.First().Id;
         }
+
+        if (PackageId is null)
+        {
+            return;
+        }
+        var package = (await PackageController.GetById(PackageId)).Value;
+
+        model.Name = package.Name;
+        model.Description = package.Description;
+        model.PackageType = package.PackageTypeId;
+        model.PickupStart = package.PickupStart;
+        model.PickupEnd = package.PickupEnd;
+        model.Quantity = package.Quantity;
+        model.Price = package.Price;
+        model.ImageUrl = package.ImageUrl;
+        model.BusinessId = package.BusinessId;
     }
 
     private async Task Submit()
     {
-        Console.WriteLine($"[DEBUG] BusinessId primit din formular: {model.BusinessId}");
-
-        if (model.BusinessId == Guid.Empty)
-        {
-            Console.WriteLine("[EROARE] BusinessId este încă gol! Problema este la binding-ul din HTML.");
-            // Aici poți pune un return ca să nu mai încerce să salveze în baza de date până nu rezolvăm
-            return;
-        }
 
         var package = new Package
         {
@@ -106,9 +123,17 @@
             ImageUrl = model.ImageUrl,
             BusinessId = model.BusinessId
         };
-        await PackageController.Add(package);
-        NavigationManager.NavigateTo("/packages");
 
+        if (PackageId is null)
+        {
+            await PackageController.Add(package);
+        }
+        else
+        {
+            await PackageController.Update(package, PackageId.Value);
+        }
+
+        NavigationManager.NavigateTo("/packages");
     }
 
     private class PackageFormModel

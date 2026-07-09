@@ -13,7 +13,7 @@ namespace EcoMeal.Controllers
             return await businessService.GetAll();
         }
 
-        public async Task<ActionResult<Business>> GetById(Guid id)
+        public async Task<ActionResult<Business>> GetById(Guid? id)
         {
             var business = await businessService.GetById(id);
             if (business is null)
@@ -26,5 +26,19 @@ namespace EcoMeal.Controllers
             await businessService.Add(business);
             return Created();
         }
-}
+
+        public async Task<ActionResult<Business>> Update(Business business, Guid id)
+        {
+            var updatedBusiness = await businessService.Update(business, id);
+            if(updatedBusiness is null)
+                return NotFound();
+            return updatedBusiness;
+        }
+
+        public async Task<ActionResult> Delete(Guid id)
+        {
+            await businessService.Delete(id);
+            return NoContent();
+        }
+    }
 }

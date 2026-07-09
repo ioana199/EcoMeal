@@ -1,11 +1,10 @@
-﻿@page "/packages"
-@rendermode InteractiveServer
+﻿@page "/businesses"
 @using EcoMeal.Controllers
 @using EcoMeal.Entities
-@inject PackageController PackageController
-<h3>Packages</h3>
+@rendermode InteractiveServer
+@inject BusinessController BusinessController
 
-@if (packages is null)
+@if(businesses is null)
 {
     <p>Loading...</p>
 }
@@ -17,29 +16,23 @@ else
                 <th>Image</th>
                 <th>Name</th>
                 <th>Description</th>
+                <th>Address</th>
                 <th>Type</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Quantity</th>
-                <th>Price</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var package in packages)
+            @foreach (var business in businesses)
             {
                 <tr>
-                    <td><img src="@package.ImageUrl" alt="@package.Name" width="60" /></td>
-                    <td>@package.Name</td>
-                    <td>@package.Description</td>
-                    <td>@package.PackageType.Name</td>
-                    <td>@package.PickupStart</td>
-                    <td>@package.PickupEnd</td>
-                    <td>@package.Quantity</td>
-                    <td>@package.Price</td>
+                    <td><img src="@business.ImageUrl" alt="@business.Name" width="60" /></td>
+                    <td>@business.Name</td>
+                    <td>@business.Description</td>
+                    <td>@business.Address</td>
+                    <td>@business.BusinessType.Name</td>
                     <td>
-                        <a href="@($"packages/update/{package.Id}")" class="btn btn-primary">Edit</a>
-                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(package)">Delete</button>
+                        <a href="@($"businesses/update/{business.Id}")" class="btn btn-primary">Edit</a>
+                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(business)">Delete</button>
                     </td>
                 </tr>
             }
@@ -47,7 +40,7 @@ else
     </table>
 }
 
-@if (packageToDelete is not null)
+@if (businessToDelete is not null)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered">
@@ -57,7 +50,7 @@ else
                     <button type="button" class="btn-close" @onclick="CancelDelete"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Sigur vrei să ștergi package-ul <strong>@packageToDelete.Name</strong>?</p>
+                    <p>Sigur vrei să ștergi business-ul <strong>@businessToDelete.Name</strong>?</p>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" @onclick="CancelDelete">Nu</button>
@@ -70,31 +63,33 @@ else
 
 
 @code {
-    private List<Package>? packages;
-    private Package? packageToDelete;
+    private List<Business>? businesses;
+    private Business? businessToDelete;
 
     protected override async Task OnInitializedAsync()
     {
-        packages = (await PackageController.GetAll()).Value;
+        businesses = (await BusinessController.GetAll()).Value;
     }
 
-    private void ShowDeleteConfirmation(Package package)
+    private void ShowDeleteConfirmation(Business business)
     {
-        packageToDelete = package;
+        businessToDelete = business;
     }
 
     private void CancelDelete()
     {
-        packageToDelete = null;
+        businessToDelete = null;
     }
 
     private async Task ConfirmDelete()
     {
-        if (packageToDelete is null)
+        if (businessToDelete is null)
             return;
 
-        await PackageController.Delete(packageToDelete.Id);
+        await BusinessController.Delete(businessToDelete.Id);
         await OnInitializedAsync();
-        packageToDelete = null;
+        businessToDelete = null;
     }
+
+
 }

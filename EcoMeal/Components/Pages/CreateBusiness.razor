@@ -1,4 +1,5 @@
-﻿@page "/business/create"
+﻿@page "/businesses/create"
+@page "/businesses/update/{BusinessId:guid}"
 @rendermode InteractiveServer
 @using EcoMeal.Controllers
 @using EcoMeal.Entities
@@ -6,7 +7,15 @@
 @inject BusinessController BusinessController
 @inject NavigationManager NavigationManager
 
-<h3>Create Business</h3>
+@if(BusinessId is null)
+{
+    <h3>Create Business</h3>
+}
+else
+{
+    <h3>Update Business</h3>
+}
+
 
 <EditForm Model="@model" FormName="createBusinessForm">
     <div class="mb-3">
@@ -43,7 +52,12 @@
 </EditForm>
 
 @code {
+    [Parameter]
+    public Guid? BusinessId { get; set; }
+    private Business? business { get; set; }
+
     private BusinessFormModel model = new BusinessFormModel();
+
 
     private async Task Submit()
     {
@@ -57,8 +71,16 @@
             ImageUrl = model.ImageUrl
         };
 
-        await BusinessController.Add(business);
-        NavigationManager.NavigateTo("/counter");
+        if (BusinessId is null)
+        {
+            await BusinessController.Add(business);
+        }
+        else
+        {
+            await BusinessController.Update(business, BusinessId.Value);
+        }
+
+        NavigationManager.NavigateTo("/businesses");
     }
 
     private class BusinessFormModel
@@ -68,5 +90,20 @@
         public string Address { get; set; } 
         public BusinessTypeEnum BusinessType { get; set; }
         public string? ImageUrl { get; set; } 
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (BusinessId is null)
+        {
+            return;
+        }
+        business = (await BusinessController.GetById(BusinessId)).Value;
+
+        model.Name = business.Name;
+        model.Description = business.Description;
+        model.Address = business.Address;
+        model.BusinessType = (BusinessTypeEnum)business.BusinessTypeId;
+        model.ImageUrl = business.ImageUrl;
     }
 }

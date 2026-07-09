@@ -5,7 +5,9 @@ namespace EcoMeal.Services.Interfaces
     public interface IBusinessService
     {
         public Task<List<Business>> GetAll();
-        public Task<Business?> GetById(Guid id);
+        public Task<Business?> GetById(Guid? id);
         public Task Add(Business business);
+        public Task<Business> Update(Business business, Guid id);
+        public Task Delete(Guid id);
     }
 }

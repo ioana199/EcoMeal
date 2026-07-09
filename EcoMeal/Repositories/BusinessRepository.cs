@@ -12,7 +12,7 @@ namespace EcoMeal.Repositories
             return await context.Businesses.Include(b=> b.BusinessType).ToListAsync();
         }
 
-        public async Task<Business?> GetByIdAsync(Guid id)
+        public async Task<Business?> GetByIdAsync(Guid? id)
         {
             return await context.Businesses.FirstOrDefaultAsync(b => b.Id == id);
         }
@@ -20,13 +20,6 @@ namespace EcoMeal.Repositories
         public async Task AddAsync(Business business)
         {
             await context.Businesses.AddAsync(business);
-            await context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(Business business)
-        {
-            context.Businesses.Update(business);
-            await context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
@@ -35,10 +28,12 @@ namespace EcoMeal.Repositories
             if (business is null)
                 return;
             context.Businesses.Remove(business);
-            await context.SaveChangesAsync();
         }
 
-        //public async Task SaveChangesAsync()
+        public async Task SaveChangesAsync()
+        {
+            await context.SaveChangesAsync();
+        }
 
     }
 }

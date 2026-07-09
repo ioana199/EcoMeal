@@ -12,20 +12,16 @@ namespace EcoMeal.Repositories
             return await context.Packages.Include(p => p.PackageType).ToListAsync();
         }
 
-        public async Task<Package?> GetByIdAsync(Guid id)
+        public async Task<Package?> GetByIdAsync(Guid? id)
         {
-            return await context.Packages.FirstOrDefaultAsync(p => p.Id == id);
+            if (id is null)
+                return null;
+            return await context.Packages.FirstOrDefaultAsync(p => p.Id == id.Value);
         }
 
         public async Task AddAsync(Package package)
         {
             await context.Packages.AddAsync(package);
-           // await context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(Package package)
-        {
-            context.Packages.Update(package);
         }
 
         public async Task DeleteAsync(Guid id)

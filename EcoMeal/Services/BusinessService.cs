@@ -12,7 +12,7 @@ namespace EcoMeal.Services
             return await businessRepository.GetAllAsync();
         }
 
-        public async Task<Business?> GetById(Guid id)
+        public async Task<Business?> GetById(Guid? id)
         {
             return await businessRepository.GetByIdAsync(id);
         }
@@ -20,6 +20,28 @@ namespace EcoMeal.Services
         public async Task Add(Business business)
         {
             await businessRepository.AddAsync(business);
+            await businessRepository.SaveChangesAsync();
+        }
+
+        public async Task<Business> Update(Business business, Guid id)
+        {
+            Business existingBusiness = await businessRepository.GetByIdAsync(id);
+
+            existingBusiness.Name = business.Name;
+            existingBusiness.Description = business.Description;
+            existingBusiness.Address = business.Address;
+            existingBusiness.BusinessTypeId = business.BusinessTypeId;
+            existingBusiness.ImageUrl = business.ImageUrl;
+            existingBusiness.BusinessType = business.BusinessType;
+
+            await businessRepository.SaveChangesAsync();
+            return existingBusiness;
+        }
+
+        public async Task Delete(Guid id)
+        {
+            await businessRepository.DeleteAsync(id);
+            await businessRepository.SaveChangesAsync();
         }
 
     }

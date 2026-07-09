@@ -14,7 +14,7 @@ namespace EcoMeal.Controllers
         {
             return await packageService.GetAll();
         }
-        public async Task<ActionResult<Package>> GetById(Guid id)
+        public async Task<ActionResult<Package>> GetById(Guid? id)
         {
             var package = await packageService.GetById(id);
             if (package is null)
@@ -25,6 +25,20 @@ namespace EcoMeal.Controllers
         {
             await packageService.Add(package);
             return Created();
+        }
+
+        public async Task<ActionResult<Package>> Update(Package package, Guid id)
+        {
+            var updatedPackage = await packageService.Update(package, id);
+            if (updatedPackage is null)
+                return NotFound();
+            return updatedPackage;
+        }
+
+        public async Task<ActionResult> Delete(Guid id)
+        {
+            await packageService.Delete(id);
+            return NoContent();
         }
     }
 }
