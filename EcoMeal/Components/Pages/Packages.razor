@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using EcoMeal.Controllers
 @using EcoMeal.Entities
+@using EcoMeal.Entities.Enums
 @inject PackageController PackageController
 <h3>Packages</h3>
 
@@ -11,6 +12,39 @@
 }
 else
 {
+    <div class="mb-3">
+        <div class="col-md-5">
+            <input class="form-control"
+                   placeholder="Caută după nume, adresă sau descriere..."
+                   @bind="searchTerm"
+                   @bind:event="oninput" />
+        </div>
+
+        <div class="col-md-4">
+            <select class="form-select" @bind="selectedType">
+                <option value="">Toate tipurile</option>
+                @foreach (var type in Enum.GetValues<PackageTypeEnum>())
+                {
+                    <option value="@type">@type</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <select class="form-select" @bind="sortOption">
+                <option value="">Fără sortare</option>
+                <option value="name_asc">Nume (A→Z)</option>
+                <option value="name_desc">Nume (Z→A)</option>
+                <option value="price_asc">Preț (mic→mare)</option>
+                <option value="price_desc">Preț (mare→mic)</option>
+                <option value="quantity_asc">Cantitate (mic→mare)</option>
+                <option value="quantity_desc">Cantitate (mare→mic)</option>
+                <option value="type_asc">Tip (A→Z)</option>
+                <option value="type_desc">Tip (Z→A)</option>
+            </select>
+        </div>
+    </div>
+
     <table class="table">
         <thead>
             <tr>
@@ -26,7 +60,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var package in packages)
+            @foreach (var package in sortedPackages)
             {
                 <tr>
                     <td><img src="@package.ImageUrl" alt="@package.Name" width="60" /></td>
@@ -72,6 +106,10 @@ else
 @code {
     private List<Package>? packages;
     private Package? packageToDelete;
+    private string searchTerm;
+    private PackageTypeEnum? selectedType;
+    private string sortOption;
+    private Business? selectedBusiness;
 
     protected override async Task OnInitializedAsync()
     {
@@ -97,4 +135,28 @@ else
         await OnInitializedAsync();
         packageToDelete = null;
     }
+
+    private IEnumerable<Package> filteredPackages =>
+       packages is null
+           ? Enumerable.Empty<Package>()
+           : packages.Where(p =>
+               (string.IsNullOrWhiteSpace(searchTerm) ||
+                (p.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (p.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) 
+               &&
+               (selectedType is null || p.PackageTypeId == selectedType));               
+
+    private IEnumerable<Package> sortedPackages =>
+       sortOption switch
+       {
+           "name_asc" => filteredPackages.OrderBy(p => p.Name),
+           "name_desc" => filteredPackages.OrderByDescending(p => p.Name),
+           "price_asc" => filteredPackages.OrderBy(p => p.Price),
+           "price_desc" => filteredPackages.OrderByDescending(p => p.Price),
+           "quantity_asc" => filteredPackages.OrderBy(p => p.Quantity),
+           "quantity_desc" => filteredPackages.OrderByDescending(p => p.Quantity),
+           "type_asc" => filteredPackages.OrderBy(p => p.PackageType.Name),
+           "type_desc" => filteredPackages.OrderByDescending(p => p.PackageType.Name),
+           _ => filteredPackages
+       };
 }
