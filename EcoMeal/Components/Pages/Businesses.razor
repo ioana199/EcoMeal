@@ -2,8 +2,11 @@
 @using EcoMeal.Controllers
 @using EcoMeal.Entities
 @using EcoMeal.Entities.Enums
+@using EcoMeal.Constants
+@using Microsoft.AspNetCore.Authorization
 @rendermode InteractiveServer
 @inject BusinessController BusinessController
+@attribute [Authorize(Roles = AppRoles.Admin)]
 
 @if(businesses is null)
 {

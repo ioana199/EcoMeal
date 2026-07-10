@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace EcoMeal.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/")]
     public class PackageController(IPackageService packageService) : ControllerBase
     {
         public async Task<ActionResult<List<Package>>> GetAll()

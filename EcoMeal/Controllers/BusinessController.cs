@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace EcoMeal.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/")]
     public class BusinessController(IBusinessService businessService) : ControllerBase
     {
         public async Task<ActionResult<List<Business>>> GetAll()
