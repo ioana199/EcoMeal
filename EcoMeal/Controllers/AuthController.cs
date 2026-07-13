@@ -1,6 +1,7 @@
 ﻿using EcoMeal.Services.Interfaces;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using EcoMeal.Entities;
 
 namespace EcoMeal.Controllers
 {
@@ -16,6 +17,16 @@ namespace EcoMeal.Controllers
                 return LocalRedirect(returnUrl ?? "/");
 
             return LocalRedirect($"/account/login?error=Invalid login&returnUrl={returnUrl}");
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromForm] RegisterModel request, [FromQuery] string? returnUrl)
+        {
+            var result = await authService.RegisterAsync(request);
+            if(result.Succeeded)
+                return LocalRedirect(returnUrl ?? "/");
+            
+            return LocalRedirect($"/account/register?error=Invalid register&returnUrl={returnUrl}");
         }
     }
 }

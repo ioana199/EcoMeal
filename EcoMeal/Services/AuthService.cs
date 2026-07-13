@@ -1,4 +1,5 @@
-﻿using EcoMeal.Entities;
+﻿using EcoMeal.Constants;
+using EcoMeal.Entities;
 using EcoMeal.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
@@ -13,9 +14,24 @@ namespace EcoMeal.Services
                 request.Email, request.Password, true, false);
         }
 
-        public async Task Register(RegisterRequest request)
+        public async Task<IdentityResult> RegisterAsync(RegisterModel request)
         {
-             
+           var existingUser = await userManager.FindByEmailAsync(request.Email);
+
+            if(existingUser != null)
+            {
+                return IdentityResult.Failed(new IdentityError { });
+            }
+         
+           var newUser = new ApplicationUser
+           { 
+               UserName=request.UserName,
+               FullName = request.FullName,
+               Email = request.Email,
+           };
+           var userToCreate = await userManager.CreateAsync(newUser, request.PasswordHash);
+           userToCreate = await userManager.AddToRoleAsync(newUser, AppRoles.Customer);
+            return userToCreate;
         }
 
     }

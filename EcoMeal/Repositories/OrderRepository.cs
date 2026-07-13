@@ -19,13 +19,6 @@ namespace EcoMeal.Repositories
         public async Task AddAsync(Order order)
         {
             await context.Orders.AddAsync(order);
-            await context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(Order order)
-        {
-            context.Orders.Update(order);
-            await context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
@@ -34,9 +27,12 @@ namespace EcoMeal.Repositories
             if (order is null)
                 return;
             context.Orders.Remove(order);
+        }
+
+        public async Task SaveChangesAsync()
+        {
             await context.SaveChangesAsync();
         }
-       
-        }
+    }
 
 }
