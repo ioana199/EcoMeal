@@ -31,16 +31,22 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/account/access-denied";
 });
 
+builder.Services.AddCascadingAuthenticationState();
+
 builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 builder.Services.AddScoped<IPackageRepository, PackageRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderPackageRepository, OrderPackageRepository>();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBusinessService, BusinessService>();
 builder.Services.AddScoped<IPackageService, PackageService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<BusinessController>();
 builder.Services.AddScoped<PackageController>();
+builder.Services.AddScoped<OrderController>();
 
 var app = builder.Build();
 

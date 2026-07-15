@@ -1,9 +1,19 @@
 ﻿@page "/shop"
+@rendermode InteractiveServer
 @using EcoMeal.Controllers
 @using EcoMeal.Entities
+@using EcoMeal.Services.Interfaces
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @inject PackageController PackageController
+@inject IOrderService OrderService
 
 <h3 class="mb-4">Pachete disponibile</h3>
+
+@if (message is not null)
+{
+    <div class="alert @(isError ? "alert-warning" : "alert-success") py-2">@message</div>
+}
 
 @if (packages is null)
 {
@@ -52,7 +62,19 @@ else
                         </ul>
 
                         <div class="mt-auto">
-                            <span class="fs-5 fw-bold text-success">@package.Price.ToString("0.00") lei</span>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fs-5 fw-bold text-success">@package.Price.ToString("0.00") lei</span>
+
+                                <input type="number" class="form-control form-control-sm" style="width: 80px;"
+                                       min="1" max="@package.Quantity"
+                                       @bind="quantities[package.Id]" />
+                            </div>
+
+                            <button class="btn btn-success btn-sm w-100"
+                                    @onclick="() => AddToCart(package)"
+                                    disabled="@(package.Quantity == 0)">
+                                Add to cart
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -63,9 +85,61 @@ else
 
 @code {
     private List<Package>? packages;
+    private Dictionary<Guid, int> quantities = new();
+
+    private string? message;
+    private bool isError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         packages = (await PackageController.GetAll()).Value;
+
+        if (packages is not null)
+        {
+            foreach (var package in packages)
+                quantities[package.Id] = 1;
+        }
+    }
+
+    private async Task<string?> GetUserIdAsync()
+    {
+        if (AuthState is null)
+            return null;
+
+        var state = await AuthState;
+        var user = state.User;
+
+        if (user.Identity is null || !user.Identity.IsAuthenticated)
+            return null;
+
+        return user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    private async Task AddToCart(Package package)
+    {
+        var userId = await GetUserIdAsync();
+        if (userId is null)
+        {
+            message = "Trebuie să fii autentificat ca să adaugi în coș.";
+            isError = true;
+            return;
+        }
+
+        var quantity = quantities.TryGetValue(package.Id, out var q) ? q : 1;
+
+        try
+        {
+            await OrderService.AddToCartAsync(userId, package.Id, quantity);
+            message = $"{package.Name} (x{quantity}) a fost adăugat în coș.";
+            isError = false;
+        }
+        catch (InvalidOperationException ex)
+        {
+            message = ex.Message;
+            isError = true;
+        }
     }
 }
