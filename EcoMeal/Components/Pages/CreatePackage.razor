@@ -8,73 +8,77 @@
 @inject PackageController PackageController
 @inject NavigationManager NavigationManager
 
-@if (PackageId is null)
-{
-    <h3>Create Package</h3>
-}
-else
-{
-    <h3>Update Package</h3>
-}
+<div class="mb-4">
+    <div class="text-muted small font-monospace">Gestiune / Pachete / @(PackageId is null ? "Nou" : "Editare")</div>
+    <h1 class="page-title mb-0" style="font-size:1.7rem;">
+        @(PackageId is null ? "Pachet nou" : "Editează pachetul")
+    </h1>
+</div>
 
-<EditForm Model="@model" FormName="createPackageForm">
-    <div class="mb-3">
-        <label for="name" class="form-label">Name</label>
-        <InputText id="name" class="form-control" @bind-Value="model.Name" />
-    </div>
+<div class="eco-tablecard" style="max-width:720px; padding:1.6rem;">
+    <EditForm Model="@model" FormName="createPackageForm">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nume</label>
+            <InputText id="name" class="form-control" @bind-Value="model.Name" placeholder="Ex. Surpriză de patiserie" />
+        </div>
 
-    <div class="mb-3">
-        <label for="description" class="form-label">Description</label>
-        <InputText id="description" class="form-control" @bind-Value="model.Description" />
-    </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Descriere</label>
+            <InputText id="description" class="form-control" @bind-Value="model.Description" />
+        </div>
 
-    <div class="mb-3">
-        <label for="PackageType" class="form-label">Type</label>
-        <InputSelect id="packageType" class="form-select" @bind-Value="model.PackageType">
-            @foreach (var type in Enum.GetValues<PackageTypeEnum>())
-            {
-                <option value="@type">@type</option>
-            }
-        </InputSelect>
-    </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="packageType" class="form-label">Tip</label>
+                <InputSelect id="packageType" class="form-select" @bind-Value="model.PackageType">
+                    @foreach (var type in Enum.GetValues<PackageTypeEnum>())
+                    {
+                        <option value="@type">@type</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-6">
+                <label for="BusinessId" class="form-label">Afacere</label>
+                <InputSelect id="BusinessId" class="form-select" @bind-Value="model.BusinessId" TValue="Guid">
+                    @foreach (var business in businesses)
+                    {
+                        <option value="@business.Id.ToString()">@business.Name</option>
+                    }
+                </InputSelect>
+            </div>
 
-    <div class="mb-3">
-        <label for="pickupStart" class="form-label">Pickup Start</label>
-        <InputDate id="pickupStart" class="form-control" @bind-Value="model.PickupStart" />
-    </div>
+            <div class="col-md-6">
+                <label for="pickupStart" class="form-label">Ridicare — de la</label>
+                <InputDate id="pickupStart" class="form-control" @bind-Value="model.PickupStart" />
+            </div>
+            <div class="col-md-6">
+                <label for="pickupEnd" class="form-label">Ridicare — până la</label>
+                <InputDate id="pickupEnd" class="form-control" @bind-Value="model.PickupEnd" />
+            </div>
 
-    <div class="mb-3">
-        <label for="pickupEnd" class="form-label">Pickup End</label>
-        <InputDate id="pickupEnd" class="form-control" @bind-Value="model.PickupEnd" />
-    </div>
+            <div class="col-md-6">
+                <label for="quantity" class="form-label">Cantitate</label>
+                <InputNumber id="quantity" class="form-control" @bind-Value="model.Quantity" />
+            </div>
+            <div class="col-md-6">
+                <label for="Price" class="form-label">Preț (lei)</label>
+                <InputNumber id="Price" class="form-control" @bind-Value="model.Price" />
+            </div>
 
-    <div class="mb-3">
-        <label for="quantity" class="form-label">Quantity</label>
-        <InputNumber id="quantity" class="form-control" @bind-Value="model.Quantity" /> 
-    </div>
+            <div class="col-12">
+                <label for="imageUrl" class="form-label">Imagine (URL)</label>
+                <InputText id="imageUrl" class="form-control" @bind-Value="model.ImageUrl" placeholder="https://…" />
+            </div>
+        </div>
 
-    <div class="mb-3">
-        <label for="Price" class="form-label">Price</label>
-        <InputNumber id="Price" class="form-control" @bind-Value="model.Price" /> 
-    </div>
-
-    <div class="mb-3">
-        <label for="imageUrl" class="form-label">Image URL</label>
-        <InputText id="imageUrl" class="form-control" @bind-Value="model.ImageUrl" />
-    </div>
-    
-    <div class="mb-3">
-        <label for="BusinessId" class="form-label">Business</label>
-        <InputSelect id="BusinessId" class="form-select" @bind-Value="model.BusinessId" TValue="Guid">
-            @foreach (var business in businesses)
-            {
-                <option value="@business.Id.ToString()">@business.Name</option>
-            }
-        </InputSelect>
-    </div>
-
-    <button type="submit" class="btn btn-primary" @onclick="Submit">Submit</button>
-</EditForm>
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary" @onclick="Submit">
+                @(PackageId is null ? "Salvează pachetul" : "Salvează modificările")
+            </button>
+            <a href="packages" class="btn btn-outline-secondary">Anulează</a>
+        </div>
+    </EditForm>
+</div>
 
 @code {
     [Parameter]
@@ -138,14 +142,14 @@ else
 
     private class PackageFormModel
     {
-        public string Name { get; set; } 
+        public string Name { get; set; }
         public string Description { get; set; }
         public PackageTypeEnum PackageType { get; set; }
         public DateTime PickupStart { get; set; } = DateTime.Now;
         public DateTime PickupEnd { get; set; } = DateTime.Now.AddDays(1);
         public int Quantity { get; set; }
         public float Price { get; set; }
-        public string ImageUrl { get; set; } 
+        public string ImageUrl { get; set; }
         public Guid BusinessId { get; set; }
 
         //intrebare: o sa luam cumva id-ul business-ului din token?

@@ -8,97 +8,119 @@
 @inject BusinessController BusinessController
 @attribute [Authorize(Roles = AppRoles.Admin)]
 
-@if(businesses is null)
+@if (businesses is null)
 {
-    <p>Loading...</p>
+    <p class="text-muted">Se încarcă…</p>
 }
 else
 {
-    <div class="mb-3">
-        <div class="col-md-5">
-        <input class="form-control"
-               placeholder="Caută după nume, adresă sau descriere..."
-               @bind="searchTerm"
-               @bind:event="oninput" />
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="text-muted small font-monospace">Gestiune / Afaceri</div>
+            <h1 class="page-title mb-0" style="font-size:1.7rem;">Afaceri</h1>
         </div>
-
-        <div class="col-md-4">
-            <select class="form-select" @bind="selectedType">
-                <option value="">Toate tipurile</option>
-                @foreach (var type in Enum.GetValues<BusinessTypeEnum>())
-                {
-                    <option value="@type">@type</option>
-                }
-            </select>
-        </div>
-
-        <div class="col-md-3">
-            <select class="form-select" @bind="sortOption">
-                <option value="">Fără sortare</option>
-                <option value="name_asc">Nume (A→Z)</option>
-                <option value="name_desc">Nume (Z→A)</option>
-                <option value="address_asc">Adresă (A→Z)</option>
-                <option value="address_desc">Adresă (Z→A)</option>
-                <option value="type_asc">Tip (A→Z)</option>
-                <option value="type_desc">Tip (Z→A)</option>
-            </select>
-        </div>
+        <a href="businesses/create" class="btn btn-primary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+            Afacere nouă
+        </a>
     </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Address</th>
-                <th>Type</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var business in sortedBusinesses)
-            {
-                <tr>
-                    <td><img src="@business.ImageUrl" alt="@business.Name" width="60" /></td>
-                    <td>@business.Name</td>
-                    <td>@business.Description</td>
-                    <td>@business.Address</td>
-                    <td>@business.BusinessType.Name</td>
-                    <td>
-                        <a href="@($"businesses/update/{business.Id}")" class="btn btn-primary">Edit</a>
-                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(business)">Delete</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    @* ---- TOOLBAR: căutare + filtru tip + sortare ---- *@
+    <div class="eco-toolbar">
+        <div class="eco-search">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+            <input class="form-control"
+                   placeholder="Caută după nume, adresă sau descriere..."
+                   @bind="searchTerm"
+                   @bind:event="oninput" />
+        </div>
 
-    @if (!sortedBusinesses.Any())
-    {
-        <p><em>No businesses found.</em></p>
-    }
+        <select class="form-select eco-w" @bind="selectedType">
+            <option value="">Toate tipurile</option>
+            @foreach (var type in Enum.GetValues<BusinessTypeEnum>())
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
+
+        <select class="form-select eco-w" @bind="sortOption">
+            <option value="">Fără sortare</option>
+            <option value="name_asc">Nume (A→Z)</option>
+            <option value="name_desc">Nume (Z→A)</option>
+            <option value="address_asc">Adresă (A→Z)</option>
+            <option value="address_desc">Adresă (Z→A)</option>
+            <option value="type_asc">Tip (A→Z)</option>
+            <option value="type_desc">Tip (Z→A)</option>
+        </select>
+    </div>
+
+    @* ---- TABEL ---- *@
+    <div class="eco-tablecard">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Imagine</th>
+                    <th>Nume</th>
+                    <th>Descriere</th>
+                    <th>Adresă</th>
+                    <th>Tip</th>
+                    <th class="text-end">Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var business in sortedBusinesses)
+                {
+                    <tr>
+                        <td><img class="eco-thumb" src="@business.ImageUrl" alt="@business.Name" /></td>
+                        <td><div class="eco-tname">@business.Name</div></td>
+                        <td><div class="eco-tdesc">@business.Description</div></td>
+                        <td class="text-muted">@business.Address</td>
+                        <td>
+                            <span class="badge-eco @(((int)business.BusinessTypeId % 4) switch { 0 => "badge-green", 1 => "badge-warm", 2 => "badge-amber", _ => "badge-neutral" })">
+                                @business.BusinessType.Name
+                            </span>
+                        </td>
+                        <td>
+                            <div class="eco-tactions">
+                                <a href="@($"businesses/update/{business.Id}")" class="btn btn-outline-secondary btn-icon" title="Editează">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                                </a>
+                                <button class="btn btn-danger btn-icon" title="Șterge" @onclick="() => ShowDeleteConfirmation(business)">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M6 6l1 14h10l1-14" /></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (!sortedBusinesses.Any())
+        {
+            <div class="p-4 text-center text-muted"><em>Nicio afacere găsită.</em></div>
+        }
+    </div>
 }
 
+@* ---- MODAL confirmare ștergere ---- *@
 @if (businessToDelete is not null)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block eco-modal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmare ștergere</h5>
-                    <button type="button" class="btn-close" @onclick="CancelDelete"></button>
+                <div class="eco-modal-ic">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M6 6l1 14h10l1-14" /><path d="M10 11v6M14 11v6" /></svg>
                 </div>
-                <div class="modal-body">
-                    <p>Sigur vrei să ștergi business-ul <strong>@businessToDelete.Name</strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="CancelDelete">Nu</button>
+                <h5 class="modal-title">Ștergi această afacere?</h5>
+                <p class="modal-text">„<strong>@businessToDelete.Name</strong>" va fi eliminată definitiv. Această acțiune nu poate fi anulată.</p>
+                <div class="modal-actions">
+                    <button class="btn btn-outline-secondary" @onclick="CancelDelete">Nu</button>
                     <button class="btn btn-danger" @onclick="ConfirmDelete">Da, șterge</button>
                 </div>
             </div>
         </div>
     </div>
+    <div class="modal-backdrop fade show"></div>
 }
 
 

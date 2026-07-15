@@ -8,5 +8,7 @@ namespace EcoMeal.Services.Interfaces
     {
         public Task<SignInResult> LoginAsync(LoginRequest request);
         public Task<IdentityResult> RegisterAsync(RegisterModel request);
+        public Task LogoutAsync();
+
     }
 }

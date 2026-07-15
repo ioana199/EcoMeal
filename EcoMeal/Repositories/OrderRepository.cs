@@ -43,6 +43,34 @@ namespace EcoMeal.Repositories
             context.Orders.Remove(order);
         }
 
+        public async Task<Order?> GetCartWithItemsAsync(string userId)
+        {
+            return await context.Orders
+                .Include(o => o.OrderPackages)
+                    .ThenInclude(op => op.Package)
+                .FirstOrDefaultAsync(o => o.UserId == userId && o.StatusId == StatusEnum.New);
+        }
+
+        public Task DeleteAsync(Order order)
+        {
+            context.Orders.Remove(order);
+            return Task.CompletedTask;
+        }
+
+        public async Task<int> GetNextOrderNumberAsync()
+        {
+            var numbers = await context.Orders
+                .Select(o => o.OrderNumber)
+                .ToListAsync();
+
+            var max = numbers
+                .Select(n => int.TryParse(n, out var v) ? v : 0)
+                .DefaultIfEmpty(0)
+                .Max();
+
+            return max + 1;
+        }
+
         public async Task SaveChangesAsync()
         {
             await context.SaveChangesAsync();

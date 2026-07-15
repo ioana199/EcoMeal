@@ -1,0 +1,147 @@
+﻿@page "/cart"
+@rendermode InteractiveServer
+@using EcoMeal.Entities
+@using EcoMeal.Services.Interfaces
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IOrderService OrderService
+@inject NavigationManager Navigation
+
+<h3 class="mb-4">Coșul meu</h3>
+
+@if (message is not null)
+{
+    <div class="alert @(isError ? "alert-warning" : "alert-success") py-2">@message</div>
+}
+
+@if (cart is null)
+{
+    <p class="text-muted">Coșul tău este gol.</p>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Pachet</th>
+                <th>Preț</th>
+                <th style="width:140px;">Cantitate</th>
+                <th>Subtotal</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in cart.OrderPackages)
+            {
+                <tr>
+                    <td>@line.Package.Name</td>
+                    <td>@line.Package.Price.ToString("0.00") lei</td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm" min="1"
+                               value="@line.Quantity"
+                               @onchange="(e) => UpdateQuantity(line.PackageId, e.Value?.ToString())" />
+                    </td>
+                    <td>@((line.Package.Price * line.Quantity).ToString("0.00")) lei</td>
+                    <td>
+                        <button class="btn btn-outline-danger btn-sm"
+                                @onclick="() => Remove(line.PackageId)">Șterge</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="fs-5 fw-bold">Total: @Total.ToString("0.00") lei</div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" @onclick="Cancel">Anulează comanda</button>
+            <button class="btn btn-success" @onclick="PlaceOrder">Plasează comanda</button>
+        </div>
+    </div>
+}
+
+@code {
+    private Order? cart;
+    private string? message;
+    private bool isError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    private float Total => cart?.OrderPackages.Sum(l => l.Package.Price * l.Quantity) ?? 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCart();
+    }
+
+    private async Task<string?> GetUserIdAsync()
+    {
+        if (AuthState is null) return null;
+        var state = await AuthState;
+        var user = state.User;
+        if (user.Identity is null || !user.Identity.IsAuthenticated) return null;
+        return user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+
+    private async Task LoadCart()
+    {
+        var userId = await GetUserIdAsync();
+        if (userId is null) return;
+        cart = await OrderService.GetCartAsync(userId);
+    }
+
+    private async Task UpdateQuantity(Guid packageId, string? value)
+    {
+        if (!int.TryParse(value, out var quantity)) return;
+        var userId = await GetUserIdAsync();
+        if (userId is null) return;
+
+        try
+        {
+            await OrderService.UpdateQuantityAsync(userId, packageId, quantity);
+            await LoadCart();
+            message = null;
+        }
+        catch (InvalidOperationException ex)
+        {
+            message = ex.Message; isError = true;
+        }
+    }
+
+    private async Task Remove(Guid packageId)
+    {
+        var userId = await GetUserIdAsync();
+        if (userId is null) return;
+        await OrderService.RemoveFromCartAsync(userId, packageId);
+        await LoadCart();
+    }
+
+    private async Task PlaceOrder()
+    {
+        var userId = await GetUserIdAsync();
+        if (userId is null) return;
+
+        try
+        {
+            await OrderService.PlaceOrderAsync(userId);
+            message = "Comanda a fost plasată!";
+            isError = false;
+            cart = null;
+        }
+        catch (InvalidOperationException ex)
+        {
+            message = ex.Message; isError = true;
+        }
+    }
+
+    private async Task Cancel()
+    {
+        var userId = await GetUserIdAsync();
+        if (userId is null) return;
+        await OrderService.CancelCartAsync(userId);
+        message = "Comanda a fost anulată.";
+        isError = false;
+        cart = null;
+    }
+}

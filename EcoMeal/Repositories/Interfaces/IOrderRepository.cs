@@ -10,5 +10,8 @@ namespace EcoMeal.Repositories.Interfaces
         public Task AddAsync(Order order);
         public Task DeleteAsync(Guid id);
         public Task SaveChangesAsync();
+        public Task<Order?> GetCartWithItemsAsync(string userId);
+        public Task DeleteAsync(Order order);
+        public Task<int> GetNextOrderNumberAsync();
     }
 }

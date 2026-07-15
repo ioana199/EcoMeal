@@ -23,10 +23,18 @@ namespace EcoMeal.Controllers
         public async Task<IActionResult> Register([FromForm] RegisterModel request, [FromQuery] string? returnUrl)
         {
             var result = await authService.RegisterAsync(request);
-            if(result.Succeeded)
-                return LocalRedirect(returnUrl ?? "/");
-            
-            return LocalRedirect($"/account/register?error=Invalid register&returnUrl={returnUrl}");
+            if (result.Succeeded)
+                return LocalRedirect(string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl);
+
+            var errors = string.Join(" ", result.Errors.Select(e => e.Description));
+            return LocalRedirect($"/account/register?error={Uri.EscapeDataString(errors)}");
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await authService.LogoutAsync();
+            return LocalRedirect("/");
         }
     }
 }

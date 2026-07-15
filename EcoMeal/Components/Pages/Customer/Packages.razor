@@ -2,13 +2,19 @@
 @rendermode InteractiveServer
 @using EcoMeal.Controllers
 @using EcoMeal.Entities
+@using EcoMeal.Entities.Enums
 @using EcoMeal.Services.Interfaces
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @inject PackageController PackageController
 @inject IOrderService OrderService
 
-<h3 class="mb-4">Pachete disponibile</h3>
+
+<div class="mb-4">
+    <div class="text-muted small font-monospace">Descoperă</div>
+    <h1 class="page-title mb-0" style="font-size:1.9rem;">Salvează mâncare bună lângă tine</h1>
+    <p class="text-muted mt-1">Pachete-surpriză de la afaceri locale, la preț redus.</p>
+</div>
 
 @if (message is not null)
 {
@@ -17,78 +23,86 @@
 
 @if (packages is null)
 {
-    <p>Loading...</p>
-}
-else if (!packages.Any())
-{
-    <p><em>Nu există pachete disponibile momentan.</em></p>
+    <p class="text-muted">Se încarcă…</p>
 }
 else
 {
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
-        @foreach (var package in packages)
+    <div class="eco-toolbar">
+        <div class="eco-search">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+            <input class="form-control" placeholder="Caută pachete sau afaceri…" @bind="searchTerm" @bind:event="oninput" />
+        </div>
+        <select class="form-select eco-w" @bind="selectedType">
+            <option value="">Toate tipurile</option>
+            @foreach (var type in Enum.GetValues<PackageTypeEnum>())
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
+    </div>
+
+    <div class="eco-pkg-grid">
+        @foreach (var package in filteredPackages)
         {
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    @if (!string.IsNullOrWhiteSpace(package.ImageUrl))
-                    {
-                        <img src="@package.ImageUrl" class="card-img-top" alt="@package.Name"
-                             style="height: 180px; object-fit: cover;" />
-                    }
-                    else
-                    {
-                        <div class="bg-light d-flex align-items-center justify-content-center"
-                             style="height: 180px;">
-                            <span class="text-muted">Fără imagine</span>
+            <div class="eco-pkg">
+                <div class="eco-pkg-img" style="background-image:url('@package.ImageUrl')">
+                    <span class="eco-pkg-left">@package.Quantity rămase</span>
+                </div>
+                <div class="eco-pkg-body">
+                    <div class="eco-pkg-biz">
+                        <img class="eco-pkg-logo" src="@package.Business?.ImageUrl" alt="" />
+                        <div>
+                            <div class="eco-pkg-bizname">@package.Business?.Name</div>
+                            <div class="eco-pkg-bizmeta">@package.Business?.BusinessType?.Name</div>
                         </div>
-                    }
-
-                    <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title mb-0">@package.Name</h5>
-                            <span class="badge bg-success">@package.PackageType?.Name</span>
-                        </div>
-
-                        @if (package.Business is not null)
-                        {
-                            <h6 class="card-subtitle text-muted mb-2">@package.Business.Name</h6>
-                        }
-
-                        <p class="card-text">@package.Description</p>
-
-                        <ul class="list-unstyled small text-muted mb-3">
-                            <li>Ridicare: @package.PickupStart.ToString("dd.MM.yyyy HH:mm") – @package.PickupEnd.ToString("dd.MM.yyyy HH:mm")</li>
-                            <li>Cantitate disponibilă: @package.Quantity</li>
-                        </ul>
-
-                        <div class="mt-auto">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="fs-5 fw-bold text-success">@package.Price.ToString("0.00") lei</span>
-
-                                <input type="number" class="form-control form-control-sm" style="width: 80px;"
-                                       min="1" max="@package.Quantity"
-                                       @bind="quantities[package.Id]" />
-                            </div>
-
-                            <button class="btn btn-success btn-sm w-100"
+                    </div>
+                    <div class="eco-pkg-name">@package.Name</div>
+                    <div class="eco-pkg-row">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                        Ridicare @package.PickupStart.ToString("dd MMM, HH:mm") – @package.PickupEnd.ToString("HH:mm")
+                    </div>
+                    <div class="eco-pkg-foot">
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="number" class="form-control form-control-sm" style="width:70px;"
+                                   min="1" max="@package.Quantity"
+                                   @bind="quantities[package.Id]" />
+                            <button class="btn btn-primary btn-sm"
                                     @onclick="() => AddToCart(package)"
                                     disabled="@(package.Quantity == 0)">
-                                Add to cart
+                                Rezervă
                             </button>
                         </div>
+                        <div class="eco-pkg-price">@package.Price.ToString("0.00") lei</div>
                     </div>
                 </div>
             </div>
         }
     </div>
+
+    @if (!filteredPackages.Any())
+    {
+        <div class="p-4 text-center text-muted"><em>Niciun pachet disponibil momentan.</em></div>
+    }
 }
 
 @code {
     private List<Package>? packages;
     private Dictionary<Guid, int> quantities = new();
+    private string searchTerm;
+    private PackageTypeEnum? selectedType;
 
     private string? message;
     private bool isError;
+
+    private IEnumerable<Package> filteredPackages =>
+        packages is null
+            ? Enumerable.Empty<Package>()
+            : packages.Where(p =>
+                (string.IsNullOrWhiteSpace(searchTerm) ||
+                 (p.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                 (p.Business?.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
+                &&
+                (selectedType is null || p.PackageTypeId == selectedType));
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthState { get; set; }
@@ -123,7 +137,7 @@ else
         var userId = await GetUserIdAsync();
         if (userId is null)
         {
-            message = "Trebuie să fii autentificat ca să adaugi în coș.";
+            message = "Trebuie să fii autentificat ca să rezervi.";
             isError = true;
             return;
         }

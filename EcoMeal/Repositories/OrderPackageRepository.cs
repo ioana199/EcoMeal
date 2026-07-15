@@ -18,6 +18,12 @@ namespace EcoMeal.Repositories
             await context.OrderPackages.AddAsync(orderPackage);
         }
 
+        public Task DeleteAsync(OrderPackage orderPackage)
+        {
+            context.OrderPackages.Remove(orderPackage);
+            return Task.CompletedTask;
+        }
+
         public async Task SaveChangesAsync()
         {
             await context.SaveChangesAsync();

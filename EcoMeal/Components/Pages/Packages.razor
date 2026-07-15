@@ -4,102 +4,124 @@
 @using EcoMeal.Entities
 @using EcoMeal.Entities.Enums
 @inject PackageController PackageController
-<h3>Packages</h3>
 
 @if (packages is null)
 {
-    <p>Loading...</p>
+    <p class="text-muted">Se încarcă…</p>
 }
 else
 {
-    <div class="mb-3">
-        <div class="col-md-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="text-muted small font-monospace">Gestiune / Pachete</div>
+            <h1 class="page-title mb-0" style="font-size:1.7rem;">Pachete</h1>
+        </div>
+        <a href="packages/create" class="btn btn-primary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+            Pachet nou
+        </a>
+    </div>
+
+    @* ---- TOOLBAR ---- *@
+    <div class="eco-toolbar">
+        <div class="eco-search">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             <input class="form-control"
                    placeholder="Caută după nume, adresă sau descriere..."
                    @bind="searchTerm"
                    @bind:event="oninput" />
         </div>
 
-        <div class="col-md-4">
-            <select class="form-select" @bind="selectedType">
-                <option value="">Toate tipurile</option>
-                @foreach (var type in Enum.GetValues<PackageTypeEnum>())
-                {
-                    <option value="@type">@type</option>
-                }
-            </select>
-        </div>
+        <select class="form-select eco-w" @bind="selectedType">
+            <option value="">Toate tipurile</option>
+            @foreach (var type in Enum.GetValues<PackageTypeEnum>())
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
 
-        <div class="col-md-3">
-            <select class="form-select" @bind="sortOption">
-                <option value="">Fără sortare</option>
-                <option value="name_asc">Nume (A→Z)</option>
-                <option value="name_desc">Nume (Z→A)</option>
-                <option value="price_asc">Preț (mic→mare)</option>
-                <option value="price_desc">Preț (mare→mic)</option>
-                <option value="quantity_asc">Cantitate (mic→mare)</option>
-                <option value="quantity_desc">Cantitate (mare→mic)</option>
-                <option value="type_asc">Tip (A→Z)</option>
-                <option value="type_desc">Tip (Z→A)</option>
-            </select>
-        </div>
+        <select class="form-select eco-w" @bind="sortOption">
+            <option value="">Fără sortare</option>
+            <option value="name_asc">Nume (A→Z)</option>
+            <option value="name_desc">Nume (Z→A)</option>
+            <option value="price_asc">Preț (mic→mare)</option>
+            <option value="price_desc">Preț (mare→mic)</option>
+            <option value="quantity_asc">Cantitate (mic→mare)</option>
+            <option value="quantity_desc">Cantitate (mare→mic)</option>
+            <option value="type_asc">Tip (A→Z)</option>
+            <option value="type_desc">Tip (Z→A)</option>
+        </select>
     </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var package in sortedPackages)
-            {
+    @* ---- TABEL ---- *@
+    <div class="eco-tablecard">
+        <table class="table table-hover align-middle">
+            <thead>
                 <tr>
-                    <td><img src="@package.ImageUrl" alt="@package.Name" width="60" /></td>
-                    <td>@package.Name</td>
-                    <td>@package.Description</td>
-                    <td>@package.PackageType.Name</td>
-                    <td>@package.PickupStart</td>
-                    <td>@package.PickupEnd</td>
-                    <td>@package.Quantity</td>
-                    <td>@package.Price</td>
-                    <td>
-                        <a href="@($"packages/update/{package.Id}")" class="btn btn-primary">Edit</a>
-                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(package)">Delete</button>
-                    </td>
+                    <th>Imagine</th>
+                    <th>Nume</th>
+                    <th>Descriere</th>
+                    <th>Tip</th>
+                    <th>Ridicare</th>
+                    <th>Cantitate</th>
+                    <th>Preț</th>
+                    <th class="text-end">Acțiuni</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var package in sortedPackages)
+                {
+                    <tr>
+                        <td><img class="eco-thumb" src="@package.ImageUrl" alt="@package.Name" /></td>
+                        <td><div class="eco-tname">@package.Name</div></td>
+                        <td><div class="eco-tdesc">@package.Description</div></td>
+                        <td>
+                            <span class="badge-eco @(((int)package.PackageTypeId % 4) switch { 0 => "badge-green", 1 => "badge-warm", 2 => "badge-amber", _ => "badge-neutral" })">
+                                @package.PackageType.Name
+                            </span>
+                        </td>
+                        <td class="text-muted" style="white-space:nowrap;">
+                            @package.PickupStart.ToString("dd MMM, HH:mm")<br />
+                            <span class="small">→ @package.PickupEnd.ToString("dd MMM, HH:mm")</span>
+                        </td>
+                        <td>@package.Quantity</td>
+                        <td><strong style="color:var(--eco-green-700);">@package.Price.ToString("0.00") lei</strong></td>
+                        <td>
+                            <div class="eco-tactions">
+                                <a href="@($"packages/update/{package.Id}")" class="btn btn-outline-secondary btn-icon" title="Editează">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                                </a>
+                                <button class="btn btn-danger btn-icon" title="Șterge" @onclick="() => ShowDeleteConfirmation(package)">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M6 6l1 14h10l1-14" /></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
+@* ---- MODAL confirmare ștergere ---- *@
 @if (packageToDelete is not null)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block eco-modal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmare ștergere</h5>
-                    <button type="button" class="btn-close" @onclick="CancelDelete"></button>
+                <div class="eco-modal-ic">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M6 6l1 14h10l1-14" /><path d="M10 11v6M14 11v6" /></svg>
                 </div>
-                <div class="modal-body">
-                    <p>Sigur vrei să ștergi package-ul <strong>@packageToDelete.Name</strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="CancelDelete">Nu</button>
+                <h5 class="modal-title">Ștergi acest pachet?</h5>
+                <p class="modal-text">„<strong>@packageToDelete.Name</strong>" va fi eliminat definitiv. Această acțiune nu poate fi anulată.</p>
+                <div class="modal-actions">
+                    <button class="btn btn-outline-secondary" @onclick="CancelDelete">Nu</button>
                     <button class="btn btn-danger" @onclick="ConfirmDelete">Da, șterge</button>
                 </div>
             </div>
         </div>
     </div>
+    <div class="modal-backdrop fade show"></div>
 }
 
 
@@ -142,9 +164,9 @@ else
            : packages.Where(p =>
                (string.IsNullOrWhiteSpace(searchTerm) ||
                 (p.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (p.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)) 
+                (p.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
                &&
-               (selectedType is null || p.PackageTypeId == selectedType));               
+               (selectedType is null || p.PackageTypeId == selectedType));
 
     private IEnumerable<Package> sortedPackages =>
        sortOption switch

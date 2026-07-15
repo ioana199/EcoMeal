@@ -7,49 +7,54 @@
 @inject BusinessController BusinessController
 @inject NavigationManager NavigationManager
 
-@if(BusinessId is null)
-{
-    <h3>Create Business</h3>
-}
-else
-{
-    <h3>Update Business</h3>
-}
+<div class="mb-4">
+    <div class="text-muted small font-monospace">Gestiune / Afaceri / @(BusinessId is null ? "Nou" : "Editare")</div>
+    <h1 class="page-title mb-0" style="font-size:1.7rem;">
+        @(BusinessId is null ? "Afacere nouă" : "Editează afacerea")
+    </h1>
+</div>
 
+<div class="eco-tablecard" style="max-width:640px; padding:1.6rem;">
+    <EditForm Model="@model" FormName="createBusinessForm">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nume</label>
+            <InputText id="name" class="form-control" @bind-Value="model.Name" placeholder="Ex. Brutăria Verde" />
+        </div>
 
-<EditForm Model="@model" FormName="createBusinessForm">
-    <div class="mb-3">
-        <label for="name" class="form-label">Name</label>
-        <InputText id="name" class="form-control" @bind-Value="model.Name" />
-    </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Descriere</label>
+            <InputText id="description" class="form-control" @bind-Value="model.Description" />
+        </div>
 
-    <div class="mb-3">
-        <label for="description" class="form-label">Description</label>
-        <InputText id="description" class="form-control" @bind-Value="model.Description" />
-    </div>
+        <div class="mb-3">
+            <label for="Address" class="form-label">Adresă</label>
+            <InputText id="Address" class="form-control" @bind-Value="model.Address" />
+        </div>
 
-    <div class="mb-3">
-        <label for="Address" class="form-label">Address</label>
-        <InputText id="Address" class="form-control" @bind-Value="model.Address" />
-    </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label for="businessType" class="form-label">Tip</label>
+                <InputSelect id="businessType" class="form-select" @bind-Value="model.BusinessType">
+                    @foreach (var type in Enum.GetValues<BusinessTypeEnum>())
+                    {
+                        <option value="@type">@type</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-6">
+                <label for="imageUrl" class="form-label">Imagine (URL)</label>
+                <InputText id="imageUrl" class="form-control" @bind-Value="model.ImageUrl" placeholder="https://…" />
+            </div>
+        </div>
 
-    <div class="mb-3">
-        <label for="BusinessType" class="form-label">Type</label>
-        <InputSelect id="businessType" class="form-select" @bind-Value="model.BusinessType">
-            @foreach (var type in Enum.GetValues<BusinessTypeEnum>())
-            {
-                <option value="@type">@type</option>
-            }
-        </InputSelect>
-    </div>
-
-    <div class="mb-3">
-        <label for="imageUrl" class="form-label">Image URL</label>
-        <InputText id="imageUrl" class="form-control" @bind-Value="model.ImageUrl" />
-    </div>
-
-    <button type="submit" class="btn btn-primary" @onclick="Submit">Submit</button>
-</EditForm>
+        <div class="d-flex gap-2 mt-2">
+            <button type="submit" class="btn btn-primary" @onclick="Submit">
+                @(BusinessId is null ? "Salvează afacerea" : "Salvează modificările")
+            </button>
+            <a href="businesses" class="btn btn-outline-secondary">Anulează</a>
+        </div>
+    </EditForm>
+</div>
 
 @code {
     [Parameter]
@@ -85,11 +90,11 @@ else
 
     private class BusinessFormModel
     {
-        public string Name { get; set; } 
-        public string? Description { get; set; } 
-        public string Address { get; set; } 
+        public string Name { get; set; }
+        public string? Description { get; set; }
+        public string Address { get; set; }
         public BusinessTypeEnum BusinessType { get; set; }
-        public string? ImageUrl { get; set; } 
+        public string? ImageUrl { get; set; }
     }
 
     protected override async Task OnInitializedAsync()

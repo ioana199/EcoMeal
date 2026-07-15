@@ -15,5 +15,7 @@ namespace EcoMeal.Entities
         [ForeignKey("StatusId")]
         public Status Status { get; set; }
         public Business Business { get; set; }
+
+        public List<OrderPackage> OrderPackages { get; set; } = new();
     }
 }

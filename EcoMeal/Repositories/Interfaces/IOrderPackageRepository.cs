@@ -6,6 +6,8 @@ namespace EcoMeal.Repositories.Interfaces
     {
         public Task<OrderPackage?> GetByOrderAndPackageAsync(Guid orderId, Guid packageId);
         public Task AddAsync(OrderPackage orderPackage);
+        public Task DeleteAsync(OrderPackage orderPackage);
+
         public Task SaveChangesAsync();
 
     }
