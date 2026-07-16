@@ -4,6 +4,11 @@
 @using EcoMeal.Entities
 @using EcoMeal.Entities.Enums
 @inject PackageController PackageController
+@attribute [Authorize(Roles = "Admin,BusinessManager")]
+@attribute [Authorize(Roles = "Admin,BusinessManager")]
+@using EcoMeal.Constants
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 
 @if (packages is null)
 {
@@ -131,11 +136,29 @@ else
     private string searchTerm;
     private PackageTypeEnum? selectedType;
     private string sortOption;
-    private Business? selectedBusiness;
+
+    private string? userId;
+    private bool isAdmin;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        packages = (await PackageController.GetAll()).Value;
+        if (AuthState is not null)
+        {
+            var state = await AuthState;
+            var user = state.User;
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            isAdmin = user.IsInRole(AppRoles.Admin);
+        }
+        await LoadPackages();
+    }
+
+    private async Task LoadPackages()
+    {
+        if (userId is null) return;
+        packages = (await PackageController.GetForManagement(userId, isAdmin)).Value;
     }
 
     private void ShowDeleteConfirmation(Package package)
@@ -150,11 +173,11 @@ else
 
     private async Task ConfirmDelete()
     {
-        if (packageToDelete is null)
+        if (packageToDelete is null || userId is null)
             return;
 
-        await PackageController.Delete(packageToDelete.Id);
-        await OnInitializedAsync();
+        await PackageController.Delete(packageToDelete.Id, userId, isAdmin);
+        await LoadPackages();
         packageToDelete = null;
     }
 

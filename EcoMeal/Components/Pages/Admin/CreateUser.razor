@@ -1,0 +1,90 @@
+﻿@page "/users/create"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+@using EcoMeal.Constants
+@using EcoMeal.Controllers
+@using EcoMeal.Entities
+@using EcoMeal.Services.Interfaces
+@inject IUserService UserService
+@inject BusinessController BusinessController
+@inject NavigationManager Navigation
+
+<h3 class="mb-4">Adaugă utilizator</h3>
+
+@if (error is not null)
+{
+    <div class="alert alert-warning py-2">@error</div>
+}
+
+<div class="row g-3" style="max-width:520px;">
+    <div class="col-12">
+        <label class="form-label">Nume complet</label>
+        <input class="form-control" @bind="fullName" />
+    </div>
+    <div class="col-12">
+        <label class="form-label">Email</label>
+        <input class="form-control" type="email" @bind="email" />
+    </div>
+    <div class="col-12">
+        <label class="form-label">Parolă</label>
+        <input class="form-control" type="password" @bind="password" />
+    </div>
+    <div class="col-12">
+        <label class="form-label">Rol</label>
+        <select class="form-select" @bind="role">
+            @foreach (var r in AppRoles.AllRoles)
+            {
+                <option value="@r">@r</option>
+            }
+        </select>
+    </div>
+
+    @if (role == AppRoles.BusinessManager)
+    {
+        <div class="col-12">
+            <label class="form-label">Business</label>
+            <select class="form-select" @bind="businessId">
+                <option value="">— alege business —</option>
+                @foreach (var b in availableBusinesses)
+                {
+                    <option value="@b.Id">@b.Name</option>
+                }
+            </select>
+        </div>
+    }
+
+    <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary" @onclick="Save">Salvează</button>
+        <a href="users" class="btn btn-outline-secondary">Anulează</a>
+    </div>
+</div>
+
+@code {
+    private string fullName = string.Empty;
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string role = AppRoles.Customer;
+    private Guid? businessId;
+
+    private List<Business> availableBusinesses = new();
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var all = (await BusinessController.GetAll()).Value ?? new List<Business>();
+        availableBusinesses = all.Where(b => b.ManagerId is null).ToList();
+    }
+
+    private async Task Save()
+    {
+        var (success, err) = await UserService.CreateAsync(fullName, email, password, role, businessId);
+        if (success)
+        {
+            Navigation.NavigateTo("/admin/users");
+        }
+        else
+        {
+            error = err;
+        }
+    }
+}

@@ -8,6 +8,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject PackageController PackageController
 @inject IOrderService OrderService
+@attribute [Authorize(Roles = "Customer")]
 
 
 <div class="mb-4">

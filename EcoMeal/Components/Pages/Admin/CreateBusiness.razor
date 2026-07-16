@@ -6,6 +6,7 @@
 @using EcoMeal.Entities.Enums
 @inject BusinessController BusinessController
 @inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
 
 <div class="mb-4">
     <div class="text-muted small font-monospace">Gestiune / Afaceri / @(BusinessId is null ? "Nou" : "Editare")</div>

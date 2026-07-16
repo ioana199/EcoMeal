@@ -30,6 +30,12 @@ namespace EcoMeal.Repositories
             context.Businesses.Remove(business);
         }
 
+        public async Task<Business?> GetByManagerAsync(string managerId)
+        {
+            return await context.Businesses
+                .FirstOrDefaultAsync(b => b.ManagerId == managerId);
+        }
+
         public async Task SaveChangesAsync()
         {
             await context.SaveChangesAsync();

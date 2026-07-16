@@ -11,7 +11,10 @@ namespace EcoMeal.Entities
         public string Description { get; set; }
         public required string Address { get; set; }
         public string ImageUrl { get; set; }
+        public string? ManagerId { get; set; }
         [ForeignKey("BusinessTypeId")]
         public BusinessType BusinessType { get; set; }
+        [ForeignKey("ManagerId")]
+        public ApplicationUser? Manager { get; set; }
     }
 }

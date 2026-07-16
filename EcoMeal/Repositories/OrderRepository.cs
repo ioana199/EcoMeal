@@ -71,6 +71,48 @@ namespace EcoMeal.Repositories
             return max + 1;
         }
 
+        public async Task<List<Order>> GetByUserWithItemsAsync(string userId)
+        {
+            return await context.Orders
+                .Include(o => o.Status)
+                .Include(o => o.Business)
+                .Include(o => o.OrderPackages)
+                    .ThenInclude(op => op.Package)
+                .Where(o => o.UserId == userId && o.StatusId != StatusEnum.New)
+                .ToListAsync();
+        }
+
+        public async Task<Order?> GetByIdWithItemsAsync(Guid id)
+        {
+            return await context.Orders
+                .Include(o => o.OrderPackages)
+                    .ThenInclude(op => op.Package)
+                .FirstOrDefaultAsync(o => o.Id == id);
+        }
+
+        public async Task<List<Order>> GetAllWithItemsAsync()
+        {
+            return await context.Orders
+                .Include(o => o.Status)
+                .Include(o => o.Business)
+                .Include(o => o.User)
+                .Include(o => o.OrderPackages)
+                    .ThenInclude(op => op.Package)
+                .ToListAsync();
+        }
+
+        public async Task<List<Order>> GetByBusinessWithItemsAsync(Guid businessId)
+        {
+            return await context.Orders
+                .Include(o => o.Status)
+                .Include(o => o.Business)
+                .Include(o => o.User)
+                .Include(o => o.OrderPackages)
+                    .ThenInclude(op => op.Package)
+                .Where(o => o.BusinessId == businessId)
+                .ToListAsync();
+        }
+
         public async Task SaveChangesAsync()
         {
             await context.SaveChangesAsync();

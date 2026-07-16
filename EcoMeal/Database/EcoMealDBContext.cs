@@ -38,8 +38,12 @@ namespace EcoMeal.Database
         .WithMany()
         .HasForeignKey(op => op.PackageId)
         .OnDelete(DeleteBehavior.Restrict);
-           
 
+            builder.Entity<Business>()
+    .HasOne(b => b.Manager)
+    .WithOne(u => u.ManagedBusiness)
+    .HasForeignKey<Business>(b => b.ManagerId)
+    .OnDelete(DeleteBehavior.SetNull);
         }
 
 

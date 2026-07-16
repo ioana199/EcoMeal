@@ -1,0 +1,51 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace EcoMeal.Migrations
+{
+    /// <inheritdoc />
+    public partial class LegaturaBusinessUser : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<string>(
+                name: "ManagerId",
+                table: "Businesses",
+                type: "nvarchar(450)",
+                nullable: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Businesses_ManagerId",
+                table: "Businesses",
+                column: "ManagerId",
+                unique: true,
+                filter: "[ManagerId] IS NOT NULL");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Businesses_AspNetUsers_ManagerId",
+                table: "Businesses",
+                column: "ManagerId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Businesses_AspNetUsers_ManagerId",
+                table: "Businesses");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Businesses_ManagerId",
+                table: "Businesses");
+
+            migrationBuilder.DropColumn(
+                name: "ManagerId",
+                table: "Businesses");
+        }
+    }
+}

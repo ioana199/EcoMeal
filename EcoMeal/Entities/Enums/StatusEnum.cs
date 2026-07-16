@@ -6,5 +6,6 @@
         Reserved = 1,
         PickedUp = 2,
         Reviewed = 3,
+        Cancelled = 4
     }
 }

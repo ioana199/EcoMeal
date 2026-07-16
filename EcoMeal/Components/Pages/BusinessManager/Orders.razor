@@ -1,0 +1,168 @@
+﻿@page "/orders"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin,BusinessManager")]
+@using EcoMeal.Constants
+@using EcoMeal.Entities
+@using EcoMeal.Entities.Enums
+@using EcoMeal.Services.Interfaces
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IOrderService OrderService
+
+<h3 class="mb-4">Gestiune comenzi</h3>
+
+@if (message is not null)
+{
+    <div class="alert @(isError ? "alert-warning" : "alert-success") py-2">@message</div>
+}
+
+@if (orders is null)
+{
+    <p class="text-muted">Se încarcă…</p>
+}
+else if (!orders.Any())
+{
+    <p class="text-muted">Nu există comenzi.</p>
+}
+else
+{
+    @foreach (var order in orders)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Comanda #@order.OrderNumber</strong>
+                    <span class="text-muted ms-2">@order.Business?.Name</span>
+                    <span class="text-muted ms-2">· @order.User?.FullName</span>
+                </div>
+                <span class="badge bg-success">@order.Status?.Name</span>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm mb-3">
+                    <thead>
+                        <tr>
+                            <th>Pachet</th>
+                            <th>Preț</th>
+                            <th>Cantitate</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in order.OrderPackages)
+                        {
+                            <tr>
+                                <td>@line.Package.Name</td>
+                                <td>@line.Package.Price.ToString("0.00") lei</td>
+                                <td>@line.Quantity</td>
+                                <td>@((line.Package.Price * line.Quantity).ToString("0.00")) lei</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="fw-bold">
+                        Total: @order.OrderPackages.Sum(l => l.Package.Price * l.Quantity).ToString("0.00") lei
+                    </div>
+
+                    <div class="d-flex gap-2 align-items-center">
+                        @if (selectedStatus.ContainsKey(order.Id))
+                        {
+                            <select class="form-select form-select-sm" style="width:auto;"
+                                    @bind="selectedStatus[order.Id]">
+                                @foreach (var status in OrderService.GetAllowedTransitions(order.StatusId))
+                                {
+                                    <option value="@status">@status</option>
+                                }
+                            </select>
+                            <button class="btn btn-primary btn-sm" @onclick="() => SaveStatus(order.Id)">
+                                Schimbă status
+                            </button>
+                        }
+
+                        @if (order.StatusId == StatusEnum.Cancelled)
+                        {
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteOrder(order.Id)">
+                                Șterge
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<Order>? orders;
+    private bool isAdmin;
+    private string? userId;
+    private Dictionary<Guid, StatusEnum> selectedStatus = new();
+
+    private string? message;
+    private bool isError;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null)
+        {
+            var state = await AuthState;
+            var user = state.User;
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            isAdmin = user.IsInRole(AppRoles.Admin);
+        }
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        if (userId is null) return;
+
+        orders = await OrderService.GetOrdersForManagementAsync(userId, isAdmin);
+
+        selectedStatus.Clear();
+        foreach (var o in orders)
+        {
+            var allowed = OrderService.GetAllowedTransitions(o.StatusId).ToList();
+            if (allowed.Any())
+                selectedStatus[o.Id] = allowed.First();
+        }
+    }
+
+    private async Task SaveStatus(Guid orderId)
+    {
+        if (userId is null) return;
+        try
+        {
+            await OrderService.ChangeStatusAsync(orderId, selectedStatus[orderId], userId, isAdmin);
+            message = "Status actualizat.";
+            isError = false;
+            await LoadOrders();
+        }
+        catch (InvalidOperationException ex)
+        {
+            message = ex.Message;
+            isError = true;
+        }
+    }
+
+    private async Task DeleteOrder(Guid orderId)
+    {
+        if (userId is null) return;
+        try
+        {
+            await OrderService.DeleteOrderAsync(orderId, userId, isAdmin);
+            message = "Comandă ștearsă.";
+            isError = false;
+            await LoadOrders();
+        }
+        catch (InvalidOperationException ex)
+        {
+            message = ex.Message;
+            isError = true;
+        }
+    }
+}

@@ -13,5 +13,10 @@ namespace EcoMeal.Repositories.Interfaces
         public Task<Order?> GetCartWithItemsAsync(string userId);
         public Task DeleteAsync(Order order);
         public Task<int> GetNextOrderNumberAsync();
+        public Task<List<Order>> GetByUserWithItemsAsync(string userId);
+        public Task<Order?> GetByIdWithItemsAsync(Guid id);
+        public Task<List<Order>> GetAllWithItemsAsync();
+        public Task<List<Order>> GetByBusinessWithItemsAsync(Guid businessId);
+
     }
 }

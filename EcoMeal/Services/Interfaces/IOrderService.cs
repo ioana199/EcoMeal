@@ -1,4 +1,5 @@
 ﻿using EcoMeal.Entities;
+using EcoMeal.Entities.Enums;
 
 namespace EcoMeal.Services.Interfaces
 {
@@ -12,5 +13,11 @@ namespace EcoMeal.Services.Interfaces
         public Task RemoveFromCartAsync(string userId, Guid packageId);
         public Task PlaceOrderAsync(string userId);
         public Task CancelCartAsync(string userId);
+        public Task<List<Order>> GetMyOrdersAsync(string userId);
+        public Task ChangeStatusAsync(Guid orderId, StatusEnum newStatus, string callerUserId, bool isAdmin);
+        public Task DeleteOrderAsync(Guid orderId, string callerUserId, bool isAdmin);
+        public Task<List<Order>> GetOrdersForManagementAsync(string callerUserId, bool isAdmin);
+        public IEnumerable<StatusEnum> GetAllowedTransitions(StatusEnum current);
+
     }
 }

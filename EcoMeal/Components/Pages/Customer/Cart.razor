@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IOrderService OrderService
 @inject NavigationManager Navigation
+@attribute [Authorize(Roles = "Customer")]
 
 <h3 class="mb-4">Coșul meu</h3>
 

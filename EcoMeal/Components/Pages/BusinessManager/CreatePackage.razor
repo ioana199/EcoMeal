@@ -1,9 +1,13 @@
 ﻿@page "/packages/create"
 @page "/packages/update/{PackageId:guid}"
 @rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin,BusinessManager")]
+@using EcoMeal.Constants
 @using EcoMeal.Entities.Enums
 @using EcoMeal.Entities
 @using EcoMeal.Controllers
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @inject BusinessController BusinessController
 @inject PackageController PackageController
 @inject NavigationManager NavigationManager
@@ -14,6 +18,11 @@
         @(PackageId is null ? "Pachet nou" : "Editează pachetul")
     </h1>
 </div>
+
+@if (error is not null)
+{
+    <div class="alert alert-warning py-2" style="max-width:720px;">@error</div>
+}
 
 <div class="eco-tablecard" style="max-width:720px; padding:1.6rem;">
     <EditForm Model="@model" FormName="createPackageForm">
@@ -37,15 +46,19 @@
                     }
                 </InputSelect>
             </div>
-            <div class="col-md-6">
-                <label for="BusinessId" class="form-label">Afacere</label>
-                <InputSelect id="BusinessId" class="form-select" @bind-Value="model.BusinessId" TValue="Guid">
-                    @foreach (var business in businesses)
-                    {
-                        <option value="@business.Id.ToString()">@business.Name</option>
-                    }
-                </InputSelect>
-            </div>
+
+            @if (isAdmin)
+            {
+                <div class="col-md-6">
+                    <label for="BusinessId" class="form-label">Afacere</label>
+                    <InputSelect id="BusinessId" class="form-select" @bind-Value="model.BusinessId" TValue="Guid">
+                        @foreach (var business in businesses)
+                        {
+                            <option value="@business.Id.ToString()">@business.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+            }
 
             <div class="col-md-6">
                 <label for="pickupStart" class="form-label">Ridicare — de la</label>
@@ -83,23 +96,41 @@
 @code {
     [Parameter]
     public Guid? PackageId { get; set; }
+
     private PackageFormModel model = new PackageFormModel();
     private List<Business> businesses = new List<Business>();
+    private string? error;
+
+    private string? userId;
+    private bool isAdmin;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        businesses = (await BusinessController.GetAll()).Value;
-
-        if (businesses != null && businesses.Any())
+        if (AuthState is not null)
         {
-            model.BusinessId = businesses.First().Id;
+            var state = await AuthState;
+            var user = state.User;
+            userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            isAdmin = user.IsInRole(AppRoles.Admin);
+        }
+
+        // doar adminul alege business-ul, deci doar lui îi trebuie lista
+        if (isAdmin)
+        {
+            businesses = (await BusinessController.GetAll()).Value ?? new List<Business>();
+            if (businesses.Any())
+                model.BusinessId = businesses.First().Id;
         }
 
         if (PackageId is null)
-        {
             return;
-        }
+
         var package = (await PackageController.GetById(PackageId)).Value;
+        if (package is null)
+            return;
 
         model.Name = package.Name;
         model.Description = package.Description;
@@ -114,6 +145,8 @@
 
     private async Task Submit()
     {
+        if (userId is null)
+            return;
 
         var package = new Package
         {
@@ -125,19 +158,22 @@
             Quantity = model.Quantity,
             Price = model.Price,
             ImageUrl = model.ImageUrl,
-            BusinessId = model.BusinessId
+            BusinessId = model.BusinessId   // pentru manager e ignorat, service-ul îl forțează
         };
 
-        if (PackageId is null)
+        try
         {
-            await PackageController.Add(package);
-        }
-        else
-        {
-            await PackageController.Update(package, PackageId.Value);
-        }
+            if (PackageId is null)
+                await PackageController.Add(package, userId, isAdmin);
+            else
+                await PackageController.Update(package, PackageId.Value, userId, isAdmin);
 
-        NavigationManager.NavigateTo("/packages");
+            NavigationManager.NavigateTo("/packages");
+        }
+        catch (InvalidOperationException ex)
+        {
+            error = ex.Message;
+        }
     }
 
     private class PackageFormModel
@@ -151,7 +187,5 @@
         public float Price { get; set; }
         public string ImageUrl { get; set; }
         public Guid BusinessId { get; set; }
-
-        //intrebare: o sa luam cumva id-ul business-ului din token?
     }
 }

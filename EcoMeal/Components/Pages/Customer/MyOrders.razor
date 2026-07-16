@@ -1,0 +1,83 @@
+﻿@page "/my-orders"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Customer")]
+@using EcoMeal.Entities
+@using EcoMeal.Services.Interfaces
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IOrderService OrderService
+
+<h3 class="mb-4">Comenzile mele</h3>
+
+@if (orders is null)
+{
+    <p class="text-muted">Se încarcă…</p>
+}
+else if (!orders.Any())
+{
+    <p class="text-muted">Nu ai nicio comandă încă.</p>
+}
+else
+{
+    @foreach (var order in orders)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Comanda #@order.OrderNumber</strong>
+                    <span class="text-muted ms-2">@order.Business?.Name</span>
+                </div>
+                <span class="badge bg-success">@order.Status?.Name</span>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm mb-2">
+                    <thead>
+                        <tr>
+                            <th>Pachet</th>
+                            <th>Preț</th>
+                            <th>Cantitate</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in order.OrderPackages)
+                        {
+                            <tr>
+                                <td>@line.Package.Name</td>
+                                <td>@line.Package.Price.ToString("0.00") lei</td>
+                                <td>@line.Quantity</td>
+                                <td>@((line.Package.Price * line.Quantity).ToString("0.00")) lei</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="text-end fw-bold">
+                    Total: @order.OrderPackages.Sum(l => l.Package.Price * l.Quantity).ToString("0.00") lei
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<Order>? orders;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await GetUserIdAsync();
+        if (userId is null) return;
+        orders = await OrderService.GetMyOrdersAsync(userId);
+    }
+
+    private async Task<string?> GetUserIdAsync()
+    {
+        if (AuthState is null) return null;
+        var state = await AuthState;
+        var user = state.User;
+        if (user.Identity is null || !user.Identity.IsAuthenticated) return null;
+        return user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    }
+}

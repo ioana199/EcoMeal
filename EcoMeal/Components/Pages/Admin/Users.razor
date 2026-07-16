@@ -1,0 +1,148 @@
+﻿@page "/users"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+@using EcoMeal.Constants
+@using EcoMeal.Controllers
+@using EcoMeal.Entities
+@using EcoMeal.Services.Interfaces
+@inject IUserService UserService
+@inject BusinessController BusinessController
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0">Utilizatori</h3>
+    <a href="users/create" class="btn btn-primary">Adaugă user</a>
+</div>
+@if (message is not null)
+{
+    <div class="alert @(isError ? "alert-warning" : "alert-success") py-2">@message</div>
+}
+
+@if (users is null)
+{
+    <p>Se încarcă…</p>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Nume</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Business</th>
+                <th style="width:320px;">Acțiuni</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in users)
+            {
+                <tr>
+                    <td>@u.User.FullName</td>
+                    <td>@u.User.Email</td>
+                    <td>@u.Role</td>
+                    <td>
+                        @if (selectedRole.TryGetValue(u.User.Id, out var mgrRole) && mgrRole == AppRoles.BusinessManager)
+                        {
+                            <select class="form-select form-select-sm" @bind="selectedBusiness[u.User.Id]">
+                                <option value="">— business —</option>
+                                @* business-ul curent al managerului (dacă are), ca să apară preselectat *@
+                                @if (u.BusinessId is not null && availableBusinesses.All(b => b.Id != u.BusinessId))
+                                {
+                                    <option value="@u.BusinessId">@u.BusinessName</option>
+                                }
+                                @foreach (var b in availableBusinesses)
+                                {
+                                    <option value="@b.Id">@b.Name</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            @u.BusinessName
+                        }
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2 align-items-center">
+                            <select class="form-select form-select-sm" @bind="selectedRole[u.User.Id]">
+                                @foreach (var role in AppRoles.AllRoles)
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            </select>
+
+                            <button class="btn btn-primary btn-sm" @onclick="() => ChangeRole(u.User.Id)">Salvează</button>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => Delete(u.User.Id)">Șterge</button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<UserWithRole>? users;
+    private List<Business> availableBusinesses = new();
+
+    private Dictionary<string, string> selectedRole = new();
+    private Dictionary<string, Guid?> selectedBusiness = new();
+
+    private string? message;
+    private bool isError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        users = await UserService.GetAllAsync();
+
+        // business-uri fără manager (pentru dropdown-ul de atribuire)
+        var all = (await BusinessController.GetAll()).Value ?? new List<Business>();
+        availableBusinesses = all.Where(b => b.ManagerId is null).ToList();
+
+        // pre-populează selecțiile cu rolul curent al fiecărui user
+        foreach (var u in users)
+        {
+            selectedRole[u.User.Id] = u.Role ?? AppRoles.Customer;
+            selectedBusiness[u.User.Id] = u.BusinessId;
+        }
+    }
+
+    private async Task ChangeRole(string userId)
+    {
+        var role = selectedRole[userId];
+        Guid? businessId = selectedBusiness.TryGetValue(userId, out var b) ? b : null;
+
+        try
+        {
+            await UserService.ChangeRoleAsync(userId, role, businessId);
+            message = "Rol actualizat.";
+            isError = false;
+            await LoadData();
+        }
+        catch (InvalidOperationException ex)
+        {
+            message = ex.Message;
+            isError = true;
+        }
+    }
+
+    private async Task Delete(string userId)
+    {
+        var (success, error) = await UserService.DeleteAsync(userId);
+        if (success)
+        {
+            message = "User șters.";
+            isError = false;
+            await LoadData();
+        }
+        else
+        {
+            message = error;
+            isError = true;
+        }
+    }
+}

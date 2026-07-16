@@ -29,8 +29,11 @@ namespace EcoMeal.Services
                FullName = request.FullName,
                Email = request.Email,
            };
-           var userToCreate = await userManager.CreateAsync(newUser, request.Password);
-           userToCreate = await userManager.AddToRoleAsync(newUser, AppRoles.Customer);
+            var userToCreate = await userManager.CreateAsync(newUser, request.Password);
+            if (!userToCreate.Succeeded)
+                return userToCreate;
+
+            await userManager.AddToRoleAsync(newUser, AppRoles.Customer);
             return userToCreate;
         }
 

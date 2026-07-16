@@ -5,5 +5,6 @@ namespace EcoMeal.Entities
     public class ApplicationUser : IdentityUser
     {
         public required string FullName { get; set; }
+        public Business? ManagedBusiness { get; set; }
     }
 }
