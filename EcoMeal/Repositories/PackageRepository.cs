@@ -9,7 +9,11 @@ namespace EcoMeal.Repositories
     {
         public async Task<List<Package>> GetAllAsync()
         {
-            return await context.Packages.Include(p => p.PackageType).ToListAsync();
+            return await context.Packages
+                .Include(p => p.PackageType)
+                .Include(p => p.Business)
+                    .ThenInclude(b => b.BusinessType)
+                .ToListAsync();
         }
 
         public async Task<Package?> GetByIdAsync(Guid? id)

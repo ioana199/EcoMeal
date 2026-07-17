@@ -9,6 +9,7 @@ namespace EcoMeal.Controllers
     [Route("api/[controller]")]
     public class AuthController(IAuthService authService) : ControllerBase
     {
+        /*
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromForm] LoginRequest request, [FromQuery] string? returnUrl)
         {
@@ -18,7 +19,7 @@ namespace EcoMeal.Controllers
 
             return LocalRedirect($"/account/login?error=Invalid login&returnUrl={returnUrl}");
         }
-
+        */
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] RegisterModel request, [FromQuery] string? returnUrl)
         {
@@ -35,6 +36,21 @@ namespace EcoMeal.Controllers
         {
             await authService.LogoutAsync();
             return LocalRedirect("/");
+        }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromForm] LoginRequest request, [FromQuery] string? returnUrl)
+        {
+            var result = await authService.LoginAsync(request);
+            if (result.Succeeded)
+            {
+                if (!string.IsNullOrEmpty(returnUrl))
+                    return LocalRedirect(returnUrl);
+
+                var path = await authService.GetPostLoginPathAsync(request.Email);
+                return LocalRedirect(path);
+            }
+
+            return LocalRedirect($"/account/login?error=Invalid login&returnUrl={returnUrl}");
         }
     }
 }

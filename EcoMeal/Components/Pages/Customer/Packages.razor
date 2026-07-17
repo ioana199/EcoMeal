@@ -1,4 +1,5 @@
 ﻿@page "/shop"
+@layout CustomerLayout
 @rendermode InteractiveServer
 @using EcoMeal.Controllers
 @using EcoMeal.Entities
@@ -33,6 +34,7 @@ else
             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             <input class="form-control" placeholder="Caută pachete sau afaceri…" @bind="searchTerm" @bind:event="oninput" />
         </div>
+
         <select class="form-select eco-w" @bind="selectedType">
             <option value="">Toate tipurile</option>
             @foreach (var type in Enum.GetValues<PackageTypeEnum>())
@@ -40,10 +42,26 @@ else
                 <option value="@type">@type</option>
             }
         </select>
+
+        <select class="form-select eco-w" @bind="selectedBusinessId">
+            <option value="">Toate afacerile</option>
+            @foreach (var business in businesses)
+            {
+                <option value="@business.Id">@business.Name</option>
+            }
+        </select>
+
+        <select class="form-select eco-w" @bind="sortOption">
+            <option value="">Sortează</option>
+            <option value="price_asc">Preț crescător</option>
+            <option value="price_desc">Preț descrescător</option>
+            <option value="name_asc">Nume (A→Z)</option>
+            <option value="name_desc">Nume (Z→A)</option>
+        </select>
     </div>
 
     <div class="eco-pkg-grid">
-        @foreach (var package in filteredPackages)
+        @foreach (var package in sortedPackages)
         {
             <div class="eco-pkg">
                 <div class="eco-pkg-img" style="background-image:url('@package.ImageUrl')">
@@ -80,7 +98,7 @@ else
         }
     </div>
 
-    @if (!filteredPackages.Any())
+    @if (!sortedPackages.Any())
     {
         <div class="p-4 text-center text-muted"><em>Niciun pachet disponibil momentan.</em></div>
     }
@@ -91,9 +109,22 @@ else
     private Dictionary<Guid, int> quantities = new();
     private string searchTerm;
     private PackageTypeEnum? selectedType;
+    private Guid? selectedBusinessId;
+    private string sortOption;
 
     private string? message;
     private bool isError;
+
+    // afacerile distincte din pachetele încărcate (pentru dropdown)
+    private IEnumerable<Business> businesses =>
+    packages is null
+        ? Enumerable.Empty<Business>()
+        : packages
+            .Where(p => p.Business is not null)
+            .Select(p => p.Business!)
+            .GroupBy(b => b.Id)
+            .Select(g => g.First())
+            .OrderBy(b => b.Name);
 
     private IEnumerable<Package> filteredPackages =>
         packages is null
@@ -103,7 +134,19 @@ else
                  (p.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
                  (p.Business?.Name?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
                 &&
-                (selectedType is null || p.PackageTypeId == selectedType));
+                (selectedType is null || p.PackageTypeId == selectedType)
+                &&
+                (selectedBusinessId is null || p.BusinessId == selectedBusinessId));
+
+    private IEnumerable<Package> sortedPackages =>
+        sortOption switch
+        {
+            "price_asc" => filteredPackages.OrderBy(p => p.Price),
+            "price_desc" => filteredPackages.OrderByDescending(p => p.Price),
+            "name_asc" => filteredPackages.OrderBy(p => p.Name),
+            "name_desc" => filteredPackages.OrderByDescending(p => p.Name),
+            _ => filteredPackages
+        };
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthState { get; set; }

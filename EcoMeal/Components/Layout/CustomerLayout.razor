@@ -1,0 +1,51 @@
+﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+
+<header class="eco-topbar">
+    <div class="eco-topbar-inner">
+        <a class="eco-brand" href="">EcoMeal</a>
+
+        <nav class="eco-topnav">
+            <NavLink class="eco-navlink" href="" Match="NavLinkMatch.All">Acasă</NavLink>
+
+            <AuthorizeView Roles="Customer">
+                <Authorized>
+                    <NavLink class="eco-navlink" href="shop">Pachete</NavLink>
+                    <NavLink class="eco-navlink" href="my-orders">Comenzile mele</NavLink>
+                    <NavLink class="eco-navlink" href="cart">Coș</NavLink>
+                </Authorized>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Admin,BusinessManager">
+                <Authorized>
+                    <NavLink class="eco-navlink" href="packages">Panou</NavLink>
+                </Authorized>
+            </AuthorizeView>
+
+            <span class="eco-spacer"></span>
+
+            <AuthorizeView>
+                <Authorized Context="acct">
+                    <span class="eco-user">@acct.User.Identity?.Name</span>
+                    <form method="post" action="api/auth/logout" class="eco-inline-form">
+                        <button type="submit" class="eco-navlink eco-navbtn">Deconectare</button>
+                    </form>
+                </Authorized>
+                <NotAuthorized>
+                    <NavLink class="eco-navlink" href="account/login">Autentificare</NavLink>
+                    <NavLink class="eco-navlink" href="account/register">Înregistrare</NavLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </nav>
+    </div>
+</header>
+
+<main class="eco-main">
+    @Body
+</main>
+
+<div id="blazor-error-ui" data-nosnippet>
+    A apărut o eroare neașteptată.
+    <a href="." class="reload">Reîncarcă</a>
+    <span class="dismiss">🗙</span>
+</div>

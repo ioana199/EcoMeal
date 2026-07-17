@@ -41,5 +41,18 @@ namespace EcoMeal.Services
         {
             await signInManager.SignOutAsync();
         }
+
+        public async Task<string> GetPostLoginPathAsync(string email)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+            if (user is null)
+                return "/";
+
+            if (await userManager.IsInRoleAsync(user, AppRoles.Admin) ||
+                await userManager.IsInRoleAsync(user, AppRoles.BusinessManager))
+                return "/packages";
+
+            return "/shop";
+        }
     }
 }

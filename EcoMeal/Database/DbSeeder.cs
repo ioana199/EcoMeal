@@ -79,83 +79,90 @@ namespace EcoMeal.Database
             return user;
         }
 
+        // Descrierea unui business de semănat (date + managerul lui)
+        private record BusinessSeed(
+            string Name, string Description, string Address, string ImageUrl,
+            BusinessTypeEnum Type, PackageTypeEnum PackageType,
+            string ManagerName, string ManagerEmail);
+
         private static async Task SeedSampleDataAsync(
             UserManager<ApplicationUser> userManager,
             EcoMealDBContext context)
         {
-            // Client de test
-            await CreateUserAsync(userManager, "Client Test", "client@ecomeal.com", "Client123!", AppRoles.Customer);
-
-            // Manageri
-            var manager1 = await CreateUserAsync(userManager, "Ana Popescu", "ana@brutarie.ro", "Manager123!", AppRoles.BusinessManager);
-            var manager2 = await CreateUserAsync(userManager, "Ion Ionescu", "ion@pizzaverde.ro", "Manager123!", AppRoles.BusinessManager);
-
-            // Business-uri (fiecare cu managerul lui)
-            var brutarie = new Business
+            var seeds = new List<BusinessSeed>
             {
-                Id = Guid.NewGuid(),
-                Name = "Brutăria Bună",
-                Description = "Produse de panificație proaspete, în fiecare zi.",
-                Address = "Str. Florilor 12, Arad",
-                ImageUrl = "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400",
-                BusinessTypeId = BusinessTypeEnum.Store,
-                ManagerId = manager1.Id
-            };
-            var pizzerie = new Business
-            {
-                Id = Guid.NewGuid(),
-                Name = "Pizza Verde",
-                Description = "Pizza artizanală cu ingrediente locale.",
-                Address = "Bd. Revoluției 40, Arad",
-                ImageUrl = "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400",
-                BusinessTypeId = BusinessTypeEnum.Restaurant,
-                ManagerId = manager2.Id
-            };
-            context.Businesses.AddRange(brutarie, pizzerie);
+                new("Brutăria Bună", "Produse de panificație proaspete, în fiecare zi.",
+                    "Str. Florilor 12, Arad", "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400",
+                    BusinessTypeEnum.Store, PackageTypeEnum.Food,
+                    "Ana Popescu", "ana@brutarie.ro"),
 
-            // Pachete
+                new("Pizza Verde", "Pizza artizanală cu ingrediente locale.",
+                    "Bd. Revoluției 40, Arad", "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400",
+                    BusinessTypeEnum.Restaurant, PackageTypeEnum.Food,
+                    "Ion Ionescu", "ion@pizzaverde.ro"),
+
+                new("Cofetăria Dulce", "Prăjituri și torturi făcute în casă.",
+                    "Str. Mucius Scaevola 5, Arad", "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=400",
+                    BusinessTypeEnum.Store, PackageTypeEnum.Food,
+                    "Maria Georgescu", "maria@cofetarie.ro"),
+
+                new("Bistro Verde", "Preparate calde, gătite zilnic.",
+                    "Str. Episcopiei 8, Arad", "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
+                    BusinessTypeEnum.Restaurant, PackageTypeEnum.Food,
+                    "Andrei Marin", "andrei@bistroverde.ro"),
+
+                new("Cafeneaua Boabă", "Cafea de specialitate și băuturi.",
+                    "Str. Unirii 22, Arad", "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400",
+                    BusinessTypeEnum.Store, PackageTypeEnum.Drink,
+                    "Elena Stan", "elena@boaba.ro"),
+
+                new("Farmacia Sănătatea", "Produse și suplimente aproape de expirare, la preț redus.",
+                    "Str. Vasile Goldiș 3, Arad", "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=400",
+                    BusinessTypeEnum.Pharmacy, PackageTypeEnum.Medicine,
+                    "Radu Dima", "radu@sanatatea.ro"),
+            };
+
             var now = DateTime.Now;
-            context.Packages.AddRange(
-                new Package
+            var random = new Random();
+
+            foreach (var seed in seeds)
+            {
+                // managerul business-ului
+                var manager = await CreateUserAsync(
+                    userManager, seed.ManagerName, seed.ManagerEmail, "Manager123!", AppRoles.BusinessManager);
+
+                // business-ul
+                var business = new Business
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Surpriză de panificație",
-                    Description = "Mix de produse rămase la final de zi.",
-                    Price = 12.5f,
-                    Quantity = 8,
-                    PickupStart = now.AddHours(3),
-                    PickupEnd = now.AddHours(5),
-                    ImageUrl = "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=400",
-                    PackageTypeId = PackageTypeEnum.Food,
-                    BusinessId = brutarie.Id
-                },
-                new Package
+                    Name = seed.Name,
+                    Description = seed.Description,
+                    Address = seed.Address,
+                    ImageUrl = seed.ImageUrl,
+                    BusinessTypeId = seed.Type,
+                    ManagerId = manager.Id
+                };
+                context.Businesses.Add(business);
+
+                // 5 pachete pentru business
+                for (int i = 1; i <= 5; i++)
                 {
-                    Id = Guid.NewGuid(),
-                    Name = "Cutie cu cornuri",
-                    Description = "Cornuri asortate, proaspete.",
-                    Price = 9.0f,
-                    Quantity = 5,
-                    PickupStart = now.AddHours(2),
-                    PickupEnd = now.AddHours(4),
-                    ImageUrl = "https://images.unsplash.com/photo-1568254183919-78a4f43a2877?w=400",
-                    PackageTypeId = PackageTypeEnum.Food,
-                    BusinessId = brutarie.Id
-                },
-                new Package
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Pizza box surpriză",
-                    Description = "Două pizze medii, alese de bucătar.",
-                    Price = 25.0f,
-                    Quantity = 4,
-                    PickupStart = now.AddHours(1),
-                    PickupEnd = now.AddHours(3),
-                    ImageUrl = "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400",
-                    PackageTypeId = PackageTypeEnum.Food,
-                    BusinessId = pizzerie.Id
+                    var startOffset = random.Next(1, 6); // peste 1-5 ore
+                    context.Packages.Add(new Package
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = $"{seed.Name} — pachet #{i}",
+                        Description = "Pachet-surpriză cu produse rămase, la preț redus.",
+                        Price = (float)Math.Round(random.NextDouble() * 25 + 5, 2), // 5–30 lei
+                        Quantity = random.Next(3, 12),                              // 3–11 buc
+                        PickupStart = now.AddHours(startOffset),
+                        PickupEnd = now.AddHours(startOffset + 2),
+                        ImageUrl = seed.ImageUrl,
+                        PackageTypeId = seed.PackageType,
+                        BusinessId = business.Id
+                    });
                 }
-            );
+            }
 
             await context.SaveChangesAsync();
         }

@@ -1,5 +1,6 @@
 
 
+
 :root {
     /* --- Brand & verde --- */
     --eco-forest: #2C4433; /* sidebar, footer, suprafețe închise */
@@ -518,3 +519,78 @@ a, .btn-link {
         right: .75rem;
         top: .5rem;
     }
+
+.eco-topbar {
+    background-color: #2f5d3a;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.eco-topbar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: .75rem 1.25rem;
+}
+
+.eco-brand {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #fff;
+    text-decoration: none;
+}
+
+.eco-topnav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.eco-spacer {
+    flex: 1;
+}
+
+.eco-navlink {
+    color: #dbe7dc;
+    text-decoration: none;
+    font-size: .95rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: .25rem 0;
+}
+
+    .eco-navlink:hover {
+        color: #fff;
+    }
+
+    .eco-navlink.active {
+        color: #fff;
+        font-weight: 600;
+    }
+
+.eco-navbtn {
+    padding: 0;
+}
+
+.eco-user {
+    color: #a9c2ac;
+    font-size: .9rem;
+}
+
+.eco-inline-form {
+    display: inline;
+    margin: 0;
+}
+
+.eco-main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem;
+}

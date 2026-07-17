@@ -1,11 +1,8 @@
-﻿@* NavMenu.razor — meniu lateral EcoMeal (rute reale din proiect) *@
-@using Microsoft.AspNetCore.Components.Authorization
+﻿@using Microsoft.AspNetCore.Components.Authorization
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">
-             EcoMeal
-        </a>
+        <a class="navbar-brand" href="">EcoMeal</a>
         <input type="checkbox" title="Meniu" class="navbar-toggler" />
     </div>
 </div>
@@ -13,48 +10,41 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
 
-        <div class="nav-section">Descoperă</div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="shop">
-                <span class="bi bi-grid" aria-hidden="true"></span> Pachete (client)
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Admin" Context="adminCtx">
+            <div class="nav-section">Administrare</div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="users">
+                    <span class="bi bi-house" aria-hidden="true"></span> Utilizatori
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="businesses">
+                    <span class="bi bi-shop" aria-hidden="true"></span> Afaceri
+                </NavLink>
+            </div>
+        </AuthorizeView>
 
-        <div class="nav-section">Gestiune</div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="businesses">
-                <span class="bi bi-shop" aria-hidden="true"></span> Afaceri
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="businesses/create">
-                <span class="bi bi-plus" aria-hidden="true"></span> Afacere nouă
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="packages">
-                <span class="bi bi-bag" aria-hidden="true"></span> Pachete
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="packages/create">
-                <span class="bi bi-plus" aria-hidden="true"></span> Pachet nou
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Admin,BusinessManager" Context="mgmtCtx">
+            <div class="nav-section">Gestiune</div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="packages">
+                    <span class="bi bi-bag" aria-hidden="true"></span> Pachete
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="orders">
+                    <span class="bi bi-bag" aria-hidden="true"></span> Comenzi
+                </NavLink>
+            </div>
+        </AuthorizeView>
 
         <div class="nav-section">Cont</div>
-
-        <AuthorizeView>
+        <AuthorizeView Context="acctCtx">
             <Authorized>
                 <div class="nav-item px-3">
                     <form method="post" action="api/auth/logout">
                         <button type="submit" class="nav-link">
-                            <span class="bi bi-house" aria-hidden="true"></span> Logout
+                            <span class="bi bi-house" aria-hidden="true"></span> Deconectare
                         </button>
                     </form>
                 </div>
@@ -62,7 +52,7 @@
             <NotAuthorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="account/login">
-                        <span class="bi bi-house" aria-hidden="true"></span> Login
+                        <span class="bi bi-house" aria-hidden="true"></span> Autentificare
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
